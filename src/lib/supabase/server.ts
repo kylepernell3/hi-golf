@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieMethodsServer } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/lib/supabase/types'
 
@@ -22,17 +22,21 @@ export async function createClient() {
             // Server component: cookies set in middleware
           }
         },
-      },
+      } satisfies CookieMethodsServer,
     }
   )
 }
 
 /** Service-role client for trusted server-side operations (webhooks, admin actions) */
 export function createAdminClient() {
-  const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
-  return createSupabaseClient<Database>(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    {
+      cookies: {
+        getAll() { return [] },
+        setAll() {},
+      } satisfies CookieMethodsServer,
+    }
   )
 }
