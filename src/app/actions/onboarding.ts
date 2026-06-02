@@ -28,6 +28,7 @@ export async function submitOnboarding(
   const supabase = await createClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
+
   if (authError || !user) {
     return { error: 'Not authenticated' }
   }
@@ -56,8 +57,9 @@ export async function submitOnboarding(
   await supabase.auth.updateUser({ data: { full_name } })
 
   // Upsert student profile
-  const { error: profileError } = await supabase
-    .from('student_profiles')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: profileError } = await (supabase
+    .from('student_profiles') as any)
     .upsert(
       {
         user_id: user.id,
@@ -75,9 +77,10 @@ export async function submitOnboarding(
   redirect('/dashboard')
 }
 
-// Read-only helper — fetch current student profile for pre-filling form
+// Read-only helper - fetch current student profile for pre-filling form
 export async function getStudentProfile() {
   const supabase = await createClient()
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
@@ -88,7 +91,6 @@ export async function getStudentProfile() {
     .single()
 
   if (error && error.code !== 'PGRST116') {
-    // PGRST116 = no rows, expected for new users
     console.error('[getStudentProfile]', error)
   }
 
