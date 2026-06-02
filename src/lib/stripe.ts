@@ -9,6 +9,8 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   typescript: true,
 })
 
+export default stripe
+
 /** Verify a Stripe webhook signature and return the event */
 export function constructWebhookEvent(
   body: string,
