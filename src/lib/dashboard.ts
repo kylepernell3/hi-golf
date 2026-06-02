@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
 export type DashboardBooking = {
   id: string
   scheduled_at: string
@@ -27,20 +26,16 @@ export type DashboardData = {
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
-
 /**
  * Fetches all data needed to render the student dashboard.
  * Must be called from a Server Component or Server Action.
  */
 export async function getDashboardData(): Promise<DashboardData | null> {
   const supabase = await createClient()
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
   if (!user) return null
-
   const userId = user.id
   const now = new Date().toISOString()
 
@@ -57,7 +52,6 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       .from('credit_ledger')
       .select('amount')
       .eq('user_id', userId),
-
     // 2. Upcoming bookings (confirmed, in the future)
     supabase
       .from('bookings')
@@ -69,7 +63,6 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       .gte('scheduled_at', now)
       .order('scheduled_at', { ascending: true })
       .limit(5),
-
     // 3. Recent completed sessions
     supabase
       .from('bookings')
@@ -81,7 +74,6 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       .lt('scheduled_at', now)
       .order('scheduled_at', { ascending: false })
       .limit(5),
-
     // 4. Recent swing uploads
     supabase
       .from('swing_uploads')
@@ -89,13 +81,12 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(4),
-
     // 5. Student profile (for onboarding gate)
     supabase
       .from('student_profiles')
       .select('onboarding_complete')
       .eq('user_id', userId)
-      .single(),
+      .maybeSingle(),
   ])
 
   // Compute credit balance from ledger (purchase = positive, debit = negative)
@@ -104,13 +95,15 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     0
   )
 
+  // Cast profile data to avoid TS 'never' inference on partial selects
+  const profile = profileResult.data as { onboarding_complete: boolean } | null
+
   return {
     creditBalance,
     upcomingBookings: (upcomingResult.data ?? []) as DashboardBooking[],
     recentSessions: (recentResult.data ?? []) as DashboardBooking[],
     recentSwings: (swingsResult.data ?? []) as SwingUpload[],
-    onboardingComplete:
-      profileResult.data?.onboarding_complete ?? false,
+    onboardingComplete: profile?.onboarding_complete ?? false,
   }
 }
 
@@ -120,17 +113,14 @@ export async function getDashboardData(): Promise<DashboardData | null> {
  */
 export async function getCreditBalance(userId: string): Promise<number> {
   const supabase = await createClient()
-
   const { data, error } = await supabase
     .from('credit_ledger')
     .select('amount')
     .eq('user_id', userId)
-
   if (error) {
     console.error('[getCreditBalance]', error)
     return 0
   }
-
   return (data ?? []).reduce(
     (sum: number, row: { amount: number }) => sum + row.amount,
     0
@@ -144,22 +134,19 @@ export async function getCreditBalance(userId: string): Promise<number> {
 export async function getCoachUpcomingBookings() {
   const supabase = await createClient()
   const now = new Date().toISOString()
-
   const { data, error } = await supabase
     .from('bookings')
     .select(
       `id, scheduled_at, duration_minutes, status, notes, credits_debited,
-       users:user_id ( email, raw_user_meta_data->full_name )`
+      users:user_id ( email, raw_user_meta_data->full_name )`
     )
     .eq('status', 'confirmed')
     .gte('scheduled_at', now)
     .order('scheduled_at', { ascending: true })
     .limit(50)
-
   if (error) {
     console.error('[getCoachUpcomingBookings]', error)
     return []
   }
-
   return data ?? []
 }
