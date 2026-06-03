@@ -24,8 +24,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          id: string
-          email: string
+          id?: string
+          email?: string
           full_name?: string | null
           avatar_url?: string | null
           role?: UserRole
@@ -41,6 +41,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       student_profiles: {
         Row: {
@@ -88,6 +89,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       bookings: {
         Row: {
@@ -132,6 +134,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       credit_ledger: {
         Row: {
@@ -164,6 +167,7 @@ export type Database = {
           stripe_session_id?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       swing_uploads: {
         Row: {
@@ -193,6 +197,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
     }
     Views: {
