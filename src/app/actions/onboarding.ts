@@ -56,15 +56,16 @@ export async function submitOnboarding(
   await supabase.auth.updateUser({ data: { full_name } })
 
   // Upsert student profile
+  // Note: We use any here to avoid typing issues with onboarding_complete while schema stabilizes
   const { error: profileError } = await supabase
     .from('student_profiles')
     .upsert(
       {
         user_id: user.id,
-        full_name, // Map full_name into profile for data consistency
+        full_name,
         ...profileData,
         onboarding_complete: true,
-      },
+      } as any,
       { onConflict: 'user_id' }
     )
 
@@ -76,7 +77,7 @@ export async function submitOnboarding(
   redirect('/dashboard')
 }
 
-// Read-only helper - fetch current student profile for pre-filling form
+// Read-only helper
 export async function getStudentProfile() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
