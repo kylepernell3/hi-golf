@@ -77,18 +77,23 @@ export async function createBooking(input: CreateBookingInput) {
  * Cancel a booking.
  * Checks cancellation window (24h), updates status, and issues credit refund.
  */
-export async function cancelBooking(bookingId: string) {
+export async function cancelBooking(input: { bookingId: string; studentId: string }) {
   const supabase = await createAdminClient()
 
   // Fetch booking details
   const { data: booking, error: fetchError } = await supabase
     .from('bookings')
     .select('*')
-    .eq('id', bookingId)
+    .eq('id', input.bookingId)
     .single()
 
   if (fetchError || !booking) {
     throw new Error('Booking not found')
+  }
+
+  // Ownership guard
+  if (booking.student_id !== input.studentId) {
+    throw new Error('Not authorized')
   }
 
   if (booking.status === 'cancelled') {
@@ -108,7 +113,7 @@ export async function cancelBooking(bookingId: string) {
   const { error: cancelError } = await supabase
     .from('bookings')
     .update({ status: 'cancelled' as BookingStatus })
-    .eq('id', bookingId)
+    .eq('id', input.bookingId)
 
   if (cancelError) {
     throw new Error(`Cancellation failed: ${cancelError.message}`)
@@ -116,7 +121,7 @@ export async function cancelBooking(bookingId: string) {
 
   // 2. Issue refund via ledger (if a credit was actually used)
   if (booking.ledger_entry_id) {
-    await refundCancellation({
+    await await refundCancellation({
       studentId: booking.student_id,
       bookingId: booking.id,
     })
