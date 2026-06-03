@@ -24,8 +24,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          id?: string
-          email?: string
+          id: string
+          email: string
           full_name?: string | null
           avatar_url?: string | null
           role?: UserRole
@@ -49,8 +49,8 @@ export type Database = {
           user_id: string
           full_name: string | null
           phone: string | null
-          handedness: Handedness
-          skill_level: SkillLevel
+          handedness: Handedness | null
+          skill_level: SkillLevel | null
           goals: string | null
           handicap: number | null
           scoring_range: string | null
@@ -64,8 +64,8 @@ export type Database = {
           user_id: string
           full_name?: string | null
           phone?: string | null
-          handedness?: Handedness
-          skill_level?: SkillLevel
+          handedness?: Handedness | null
+          skill_level?: SkillLevel | null
           goals?: string | null
           handicap?: number | null
           scoring_range?: string | null
@@ -79,8 +79,8 @@ export type Database = {
           user_id?: string
           full_name?: string | null
           phone?: string | null
-          handedness?: Handedness
-          skill_level?: SkillLevel
+          handedness?: Handedness | null
+          skill_level?: SkillLevel | null
           goals?: string | null
           handicap?: number | null
           scoring_range?: string | null
@@ -97,74 +97,74 @@ export type Database = {
           student_id: string
           coach_id: string | null
           scheduled_at: string
-          duration_minutes: number
+          duration_mins: number
           status: BookingStatus
           location: string | null
           student_notes: string | null
           coach_notes: string | null
           ledger_entry_id: string | null
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
           student_id: string
           coach_id?: string | null
           scheduled_at: string
-          duration_minutes?: number
+          duration_mins: number
           status?: BookingStatus
           location?: string | null
           student_notes?: string | null
           coach_notes?: string | null
           ledger_entry_id?: string | null
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
           student_id?: string
           coach_id?: string | null
           scheduled_at?: string
-          duration_minutes?: number
+          duration_mins?: number
           status?: BookingStatus
           location?: string | null
           student_notes?: string | null
           coach_notes?: string | null
           ledger_entry_id?: string | null
           created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
       credit_ledger: {
         Row: {
           id: string
-          user_id: string
-          amount: number
-          type: LedgerEntryType
-          description: string | null
+          student_id: string
+          delta: number
+          entry_type: LedgerEntryType
+          product_id: string | null
           booking_id: string | null
-          stripe_session_id: string | null
+          stripe_payment_intent_id: string | null
+          note: string | null
           created_at: string
         }
         Insert: {
           id?: string
-          user_id: string
-          amount: number
-          type: LedgerEntryType
-          description?: string | null
+          student_id: string
+          delta: number
+          entry_type: LedgerEntryType
+          product_id?: string | null
           booking_id?: string | null
-          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          note?: string | null
           created_at?: string
         }
         Update: {
           id?: string
-          user_id?: string
-          amount?: number
-          type?: LedgerEntryType
-          description?: string | null
+          student_id?: string
+          delta?: number
+          entry_type?: LedgerEntryType
+          product_id?: string | null
           booking_id?: string | null
-          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          note?: string | null
           created_at?: string
         }
         Relationships: []
@@ -172,42 +172,30 @@ export type Database = {
       swing_uploads: {
         Row: {
           id: string
-          user_id: string
+          student_id: string
           file_url: string
-          coach_notes: string | null
-          status: 'pending' | 'reviewed'
           created_at: string
-          updated_at: string
+          coach_notes: string | null
         }
         Insert: {
           id?: string
-          user_id: string
+          student_id: string
           file_url: string
-          coach_notes?: string | null
-          status?: 'pending' | 'reviewed'
           created_at?: string
-          updated_at?: string
+          coach_notes?: string | null
         }
         Update: {
           id?: string
-          user_id?: string
+          student_id?: string
           file_url?: string
-          coach_notes?: string | null
-          status?: 'pending' | 'reviewed'
           created_at?: string
-          updated_at?: string
+          coach_notes?: string | null
         }
         Relationships: []
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
   }
 }
