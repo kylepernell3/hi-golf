@@ -3,7 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
-import type { Database } from '@/types/database'
+import type { Database, Handedness, SkillLevel } from '@/types/database'
+
+type StudentProfileInsert = Database['public']['Tables']['student_profiles']['Insert']
 
 const OnboardingSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
@@ -56,16 +58,15 @@ export async function submitOnboarding(
   // Update auth user display name
   await supabase.auth.updateUser({ data: { full_name } })
 
-  // Upsert student profile with casting to work around the table inference issue
-  // The 'never[]' error usually means the from() call failed to correctly infer the table name or types
-  const insertData = {
+  // Upsert student profile using properly typed Insert payload
+  const insertData: StudentProfileInsert = {
     user_id: user.id,
     full_name,
     phone: profileData.phone || null,
-    handedness: profileData.handedness,
-    skill_level: profileData.skill_level,
+    handedness: (profileData.handedness as Handedness) ?? 'unknown',
+    skill_level: (profileData.skill_level as SkillLevel) ?? 'beginner',
     goals: profileData.goals || null,
-    handicap: profileData.handicap,
+    handicap: profileData.handicap ?? null,
     scoring_range: profileData.scoring_range || null,
     notes: profileData.notes || null,
     onboarding_complete: true,
@@ -73,7 +74,7 @@ export async function submitOnboarding(
 
   const { error: profileError } = await supabase
     .from('student_profiles')
-    .upsert(insertData as any, { onConflict: 'user_id' })
+    .upsert(insertData, { onConflict: 'user_id' })
 
   if (profileError) {
     console.error('[onboarding] profile upsert error:', profileError)
@@ -99,5 +100,5 @@ export async function getStudentProfile() {
     console.error('[getStudentProfile]', error)
   }
 
-  return (data as any) ?? null
+  return data ?? null
 }
