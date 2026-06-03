@@ -10,7 +10,7 @@ import type { BookingStatus } from '@/lib/supabase/types'
 export interface CreateBookingInput {
   studentId: string
   coachId?: string
-  scheduledAt: string   // ISO 8601
+  scheduledAt: string // ISO 8601
   durationMins?: number
   location?: string
   studentNotes?: string
@@ -19,11 +19,10 @@ export interface CreateBookingInput {
 /**
  * Create a new booking.
  * Validates the student has at least 1 credit, creates the booking record
- * in 'pending' status, then debits the credit and updates to 'confirmed'.
- * Uses admin client so RLS is not a blocker server-side.
+ * in 'pending' status, debits the credit via ledger, and then confirms.
  */
 export async function createBooking(input: CreateBookingInput) {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
 
   // 1. Guard: student must have credits
   const balance = await getStudentBalance(input.studentId)
@@ -39,7 +38,7 @@ export async function createBooking(input: CreateBookingInput) {
       coach_id: input.coachId ?? null,
       scheduled_at: input.scheduledAt,
       duration_mins: input.durationMins ?? 60,
-      status: 'pending',
+      status: 'pending' as BookingStatus,
       location: input.location ?? null,
       student_notes: input.studentNotes ?? null,
     })
@@ -60,7 +59,7 @@ export async function createBooking(input: CreateBookingInput) {
   const { data: confirmedBooking, error: updateError } = await supabase
     .from('bookings')
     .update({
-      status: 'confirmed',
+      status: 'confirmed' as BookingStatus,
       ledger_entry_id: ledgerEntry.id,
     })
     .eq('id', booking.id)
@@ -76,71 +75,95 @@ export async function createBooking(input: CreateBookingInput) {
 
 /**
  * Cancel a booking.
- * If the booking was confirmed, refunds 1 credit to the student.
+ * Checks cancellation window (24h), updates status, and issues credit refund.
  */
-export async function cancelBooking({
-  bookingId,
-  studentId,
-}: {
-  bookingId: string
-  studentId: string
-}) {
-  const supabase = createAdminClient()
+export async function cancelBooking(bookingId: string) {
+  const supabase = await createAdminClient()
 
-  // Fetch current status
-  const { data: booking, error } = await supabase
+  // Fetch booking details
+  const { data: booking, error: fetchError } = await supabase
     .from('bookings')
-    .select('status, student_id')
+    .select('*')
     .eq('id', bookingId)
     .single()
 
-  if (error || !booking) throw new Error('Booking not found')
-  if (booking.student_id !== studentId) throw new Error('Not authorized')
-
-  const refundable: BookingStatus[] = ['pending', 'confirmed']
-  const shouldRefund = refundable.includes(booking.status)
-
-  // Update status to cancelled
-  await supabase
-    .from('bookings')
-    .update({ status: 'cancelled' })
-    .eq('id', bookingId)
-
-  // Refund credit if applicable
-  if (shouldRefund) {
-    await refundCancellation({ studentId, bookingId })
+  if (fetchError || !booking) {
+    throw new Error('Booking not found')
   }
 
-  return { cancelled: true, credited: shouldRefund }
+  if (booking.status === 'cancelled') {
+    return booking
+  }
+
+  // Check 24-hour window
+  const scheduledTime = new Date(booking.scheduled_at).getTime()
+  const now = Date.now()
+  const hoursRemaining = (scheduledTime - now) / (1000 * 60 * 60)
+
+  if (hoursRemaining < 24) {
+    throw new Error('Cancellations must be made at least 24 hours in advance.')
+  }
+
+  // 1. Mark as cancelled
+  const { error: cancelError } = await supabase
+    .from('bookings')
+    .update({ status: 'cancelled' as BookingStatus })
+    .eq('id', bookingId)
+
+  if (cancelError) {
+    throw new Error(`Cancellation failed: ${cancelError.message}`)
+  }
+
+  // 2. Issue refund via ledger (if a credit was actually used)
+  if (booking.ledger_entry_id) {
+    await refundCancellation({
+      studentId: booking.student_id,
+      bookingId: booking.id,
+    })
+  }
+
+  return { success: true }
 }
 
-/** Get upcoming bookings for a student */
+/**
+ * Student-side: fetch upcoming bookings
+ */
 export async function getUpcomingBookings(studentId: string) {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
+  const now = new Date().toISOString()
 
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
     .eq('student_id', studentId)
-    .in('status', ['pending', 'confirmed'])
-    .gte('scheduled_at', new Date().toISOString())
+    .eq('status', 'confirmed')
+    .gte('scheduled_at', now)
     .order('scheduled_at', { ascending: true })
 
-  if (error) throw new Error(`Bookings fetch failed: ${error.message}`)
-  return data ?? []
+  if (error) {
+    console.error('[getUpcomingBookings]', error)
+    return []
+  }
+
+  return data
 }
 
-/** Get all bookings for a student (history) */
+/**
+ * Student-side: fetch full history
+ */
 export async function getBookingHistory(studentId: string) {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
     .eq('student_id', studentId)
     .order('scheduled_at', { ascending: false })
-    .limit(20)
 
-  if (error) throw new Error(`Booking history fetch failed: ${error.message}`)
-  return data ?? []
+  if (error) {
+    console.error('[getBookingHistory]', error)
+    return []
+  }
+
+  return data
 }
