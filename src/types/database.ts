@@ -32,7 +32,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['users']['Insert']>
+        Update: Record<string, unknown>
       }
       student_profiles: {
         Row: {
@@ -65,7 +65,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['student_profiles']['Insert']>
+        Update: Record<string, unknown>
       }
       bookings: {
         Row: {
@@ -96,7 +96,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['bookings']['Insert']>
+        Update: Record<string, unknown>
       }
       credit_ledger: {
         Row: {
@@ -119,7 +119,7 @@ export type Database = {
           stripe_session_id?: string | null
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['credit_ledger']['Insert']>
+        Update: Record<string, unknown>
       }
       swing_uploads: {
         Row: {
@@ -140,7 +140,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['swing_uploads']['Insert']>
+        Update: Record<string, unknown>
       }
     }
     Views: {
