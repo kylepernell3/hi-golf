@@ -33,7 +33,7 @@ export async function createBooking(input: CreateBookingInput) {
   // 2. Create booking in pending status
   const { data: booking, error: bookingError } = await supabase
     .from('bookings')
-    .insert({
+    .insert(({
       student_id: input.studentId,
       coach_id: input.coachId ?? null,
       scheduled_at: input.scheduledAt,
@@ -41,7 +41,7 @@ export async function createBooking(input: CreateBookingInput) {
       status: 'pending' as BookingStatus,
       location: input.location ?? null,
       student_notes: input.studentNotes ?? null,
-    })
+    }) as any)
     .select()
     .single()
 
