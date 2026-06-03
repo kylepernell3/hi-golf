@@ -1,5 +1,4 @@
 'use server'
-
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -26,9 +25,7 @@ export async function submitOnboarding(
   formData: FormData
 ): Promise<OnboardingFormState> {
   const supabase = await createClient()
-
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-
   if (authError || !user) {
     return { error: 'Not authenticated' }
   }
@@ -52,14 +49,12 @@ export async function submitOnboarding(
   }
 
   const { full_name, ...profileData } = parsed.data
-
   // Update auth user display name
   await supabase.auth.updateUser({ data: { full_name } })
 
   // Upsert student profile
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: profileError } = await (supabase
-    .from('student_profiles') as any)
+  const { error: profileError } = await supabase
+    .from('student_profiles')
     .upsert(
       {
         user_id: user.id,
@@ -80,19 +75,16 @@ export async function submitOnboarding(
 // Read-only helper - fetch current student profile for pre-filling form
 export async function getStudentProfile() {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-
   const { data, error } = await supabase
     .from('student_profiles')
     .select('*')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (error && error.code !== 'PGRST116') {
+  if (error) {
     console.error('[getStudentProfile]', error)
   }
-
   return data ?? null
 }
