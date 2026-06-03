@@ -98,12 +98,12 @@ export async function getDashboardData(): Promise<DashboardData | null> {
   ])
 
   // Compute credit balance from ledger
-  const creditBalance = (ledgerResult.data ?? []).reduce(
+  const creditBalance = (ledgerResult.data as any[] ?? []).reduce(
     (sum: number, row: { amount: number }) => sum + row.amount,
     0
   )
 
-  const profile = profileResult.data
+  const profile = profileResult.data as any
 
   return {
     creditBalance,
