@@ -57,8 +57,8 @@ export async function middleware(request: NextRequest) {
       .select('role')
       .eq('id', user.id)
       .single()
-    
-    const role = (userData as any)?.role
+
+    const role = (userData as { role: string } | null)?.role
     if (!role || !['coach', 'admin'].includes(role)) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
@@ -66,13 +66,14 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users who haven't completed onboarding
   if (pathname.startsWith('/dashboard') && user) {
-    const { data: profileRaw } = await supabase
+    const { data: profileData } = await supabase
       .from('student_profiles')
       .select('onboarding_complete')
       .eq('user_id', user.id)
       .maybeSingle()
-    
-    if (profileRaw && !(profileRaw as any).onboarding_complete && pathname !== '/onboarding') {
+
+    const profile = profileData as { onboarding_complete: boolean } | null
+    if (profile && !profile.onboarding_complete && pathname !== '/onboarding') {
       return NextResponse.redirect(new URL('/onboarding', request.url))
     }
   }
@@ -82,6 +83,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
