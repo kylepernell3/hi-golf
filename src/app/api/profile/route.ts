@@ -52,9 +52,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
 
+  // Cast to any to resolve TS type narrowing issues with Supabase generated types
+  const updatePayload = { ...parsed.data, updated_at: new Date().toISOString() } as any
+
   const { data, error } = await supabase
     .from('student_profiles')
-    .update({ ...parsed.data, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq('user_id', user.id)
     .select()
     .single()
