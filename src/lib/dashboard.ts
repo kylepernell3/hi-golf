@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Database } from '@/types/database'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────────────
 
 export type DashboardBooking = {
   id: string
   scheduled_at: string
-  duration_minutes: number
+  duration_mins: number
   status: string
   notes: string | null
   credits_debited: number
@@ -27,7 +26,7 @@ export type DashboardData = {
   onboardingComplete: boolean
 }
 
-// ─── Queries ─────────────────────────────────────────────────────────────────
+// ─── Queries ───────────────────────────────────────────────────────────────────────
 
 /**
  * Fetches all data needed to render the student dashboard.
@@ -40,6 +39,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
   } = await supabase.auth.getUser()
 
   if (!user) return null
+
   const userId = user.id
   const now = new Date().toISOString()
 
@@ -51,17 +51,17 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     swingsResult,
     profileResult,
   ] = await Promise.all([
-    // 1. Credit balance: sum all ledger entries for this user
+    // 1. Credit balance: sum all delta entries for this student
     supabase
       .from('credit_ledger')
-      .select('amount')
-      .eq('user_id', userId),
+      .select('delta')
+      .eq('student_id', userId),
 
     // 2. Upcoming bookings (confirmed, in the future)
     supabase
       .from('bookings')
       .select(
-        'id, scheduled_at, duration_minutes, status, student_notes, coach_notes'
+        'id, scheduled_at, duration_mins, status, student_notes, coach_notes'
       )
       .eq('student_id', userId)
       .eq('status', 'confirmed')
@@ -73,7 +73,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     supabase
       .from('bookings')
       .select(
-        'id, scheduled_at, duration_minutes, status, student_notes, coach_notes'
+        'id, scheduled_at, duration_mins, status, student_notes, coach_notes'
       )
       .eq('student_id', userId)
       .eq('status', 'completed')
@@ -85,7 +85,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     supabase
       .from('swing_uploads')
       .select('id, file_url, created_at, coach_notes')
-      .eq('user_id', userId)
+      .eq('student_id', userId)
       .order('created_at', { ascending: false })
       .limit(4),
 
@@ -97,9 +97,9 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       .maybeSingle(),
   ])
 
-  // Compute credit balance from ledger
+  // Compute credit balance from ledger delta column
   const creditBalance = (ledgerResult.data as any[] ?? []).reduce(
-    (sum: number, row: { amount: number }) => sum + row.amount,
+    (sum: number, row: { delta: number }) => sum + row.delta,
     0
   )
 
@@ -110,18 +110,18 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     upcomingBookings: (upcomingResult.data ?? []).map((b: any) => ({
       id: b.id,
       scheduled_at: b.scheduled_at,
-      duration_minutes: b.duration_minutes,
+      duration_mins: b.duration_mins,
       status: b.status,
       notes: b.student_notes,
-      credits_debited: 1 // Default or derived if field missing
+      credits_debited: 1,
     })),
     recentSessions: (recentResult.data ?? []).map((b: any) => ({
       id: b.id,
       scheduled_at: b.scheduled_at,
-      duration_minutes: b.duration_minutes,
+      duration_mins: b.duration_mins,
       status: b.status,
       notes: b.student_notes,
-      credits_debited: 1
+      credits_debited: 1,
     })),
     recentSwings: (swingsResult.data ?? []) as SwingUpload[],
     onboardingComplete: !!profile?.onboarding_complete,
@@ -135,8 +135,8 @@ export async function getCreditBalance(userId: string): Promise<number> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('credit_ledger')
-    .select('amount')
-    .eq('user_id', userId)
+    .select('delta')
+    .eq('student_id', userId)
 
   if (error) {
     console.error('[getCreditBalance]', error)
@@ -144,7 +144,7 @@ export async function getCreditBalance(userId: string): Promise<number> {
   }
 
   return (data ?? []).reduce(
-    (sum: number, row: { amount: number }) => sum + row.amount,
+    (sum: number, row: { delta: number | null }) => sum + (row.delta ?? 0),
     0
   )
 }
@@ -159,8 +159,7 @@ export async function getCoachUpcomingBookings() {
   const { data, error } = await supabase
     .from('bookings')
     .select(
-      `id, scheduled_at, duration_minutes, status, student_notes, coach_notes,
-       student:student_id ( id )`
+      `id, scheduled_at, duration_mins, status, student_notes, coach_notes, student:student_id ( id )`
     )
     .eq('status', 'confirmed')
     .gte('scheduled_at', now)
