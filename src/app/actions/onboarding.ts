@@ -56,8 +56,8 @@ export async function submitOnboarding(
   // Update auth user display name
   await supabase.auth.updateUser({ data: { full_name } })
 
-  // Upsert student profile with proper typing
-  const insertData: Database['public']['Tables']['student_profiles']['Insert'] = {
+  // Upsert student profile with casting to work around the table inference issue
+  const insertData = {
     user_id: user.id,
     full_name,
     phone: profileData.phone || null,
@@ -68,7 +68,7 @@ export async function submitOnboarding(
     scoring_range: profileData.scoring_range || null,
     notes: profileData.notes || null,
     onboarding_complete: true,
-  }
+  } as Database['public']['Tables']['student_profiles']['Insert']
 
   const { error: profileError } = await supabase
     .from('student_profiles')
