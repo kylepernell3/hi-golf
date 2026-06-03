@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single()
     
-    const role = userData?.role
+    const role = (userData as any)?.role
     if (!role || !['coach', 'admin'].includes(role)) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
