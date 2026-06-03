@@ -1,6 +1,6 @@
 import { createServerClient, type CookieMethodsServer } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/types/database'
 
 // Routes that require authentication
 const PROTECTED_ROUTES = ['/dashboard', '/onboarding', '/admin']
