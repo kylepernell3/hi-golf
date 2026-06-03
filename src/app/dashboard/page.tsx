@@ -31,141 +31,195 @@ function fmtRelative(iso: string) {
   return fmtDate(iso)
 }
 
-function Section({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-zinc-800/70 bg-zinc-900/40 overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
-        <span className="text-[10px] tracking-[0.2em] uppercase text-zinc-500 font-medium">{title}</span>
-        {count !== undefined && <span className="text-[10px] text-zinc-600 tabular-nums">{count} {count === 1 ? 'item' : 'items'}</span>}
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="px-5 py-10 flex flex-col items-center gap-2 text-center">
-      <div className="w-7 h-7 rounded-full border border-zinc-800 flex items-center justify-center mb-1">
-        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5 text-zinc-700">
-          <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.2" />
-          <path d="M8 5v3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          <circle cx="8" cy="11" r="0.6" fill="currentColor" />
-        </svg>
-      </div>
-      <p className="text-xs text-zinc-600 max-w-[18rem] leading-relaxed">{message}</p>
-    </div>
-  )
-}
-
 export default async function DashboardPage() {
   const raw = await getDashboardData()
   if (!raw) redirect('/login')
-
   const data = raw as unknown as DashboardData
   const { onboardingComplete, creditBalance, upcomingBookings = [], recentSessions = [], recentSwingUploads = [] } = data
   const balanceIsLow = creditBalance > 0 && creditBalance <= 2
   const balanceIsZero = creditBalance === 0
 
+  const creditColor = balanceIsZero
+    ? 'text-red-400'
+    : balanceIsLow
+      ? 'text-yellow-500'
+      : 'text-amber-400'
+
+  const creditBarPct = Math.min(100, (creditBalance / 10) * 100)
+
   return (
-    <div className="relative min-h-screen bg-zinc-950 overflow-x-hidden">
-      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 40% at 50% -5%, rgba(217,119,6,0.06) 0%, transparent 65%)' }} />
+    <div className="relative min-h-screen bg-zinc-950">
+      {/* Ambient overlays */}
+      <div aria-hidden className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-amber-500/5 blur-3xl" />
+      <div aria-hidden className="pointer-events-none fixed bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] rounded-full bg-emerald-500/[0.04] blur-3xl" />
 
-      {!onboardingComplete && (
-        <div className="relative z-10 bg-amber-500 px-4 py-2.5 flex items-center justify-center gap-3 text-zinc-950">
-          <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 shrink-0"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.75 3.75a.75.75 0 0 1 1.5 0v3.5a.75.75 0 0 1-1.5 0v-3.5zm.75 7a.875.875 0 1 1 0-1.75.875.875 0 0 1 0 1.75z" /></svg>
-          <span className="text-sm font-medium leading-none">Your profile isn't finished yet.</span>
-          <Link href="/onboarding" className="text-sm font-semibold underline underline-offset-2 hover:no-underline transition-all">Complete setup →</Link>
-        </div>
-      )}
+      <div className="relative max-w-2xl mx-auto px-4 py-10 flex flex-col gap-6">
 
-      <div className="relative z-0 max-w-3xl mx-auto px-5 py-10 flex flex-col gap-8">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <GolfFlagIcon />
-            <h1 className="text-white font-light tracking-[0.22em] text-lg leading-none" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>HI GOLF</h1>
+        {/* ── Page header ── */}
+        <div className="flex items-center gap-3 select-none mb-1">
+          <GolfFlagIcon />
+          <div>
+            <h1
+              className="text-white font-serif tracking-tight text-3xl leading-none"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              HI GOLF
+            </h1>
+            <p className="text-zinc-400 text-sm uppercase tracking-widest mt-0.5">Student Dashboard</p>
           </div>
-          <span className="text-[10px] tracking-[0.2em] uppercase text-zinc-600">Student Dashboard</span>
-        </header>
+        </div>
 
-        <section className="rounded-2xl border border-zinc-800/70 bg-zinc-900/50 backdrop-blur-sm overflow-hidden">
-          <div className="px-7 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] tracking-[0.22em] uppercase text-zinc-500">Lesson Credits</span>
-              <div className="flex items-end gap-3 mt-1">
-                <span className={['text-[5rem] leading-none font-light tabular-nums tracking-tight', balanceIsZero ? 'text-zinc-600' : balanceIsLow ? 'text-amber-300' : 'text-amber-400'].join(' ')} style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>{creditBalance}</span>
-                <span className="text-zinc-500 text-sm mb-2.5 leading-tight">{creditBalance === 1 ? 'credit remaining' : 'credits remaining'}</span>
-              </div>
-              {balanceIsZero && <p className="text-xs text-zinc-600 mt-0.5">You're out of credits. Add some to book your next session.</p>}
-              {balanceIsLow && <p className="text-xs text-amber-600/80 mt-0.5">Running low — top up before your next booking.</p>}
+        {/* ── Onboarding banner ── */}
+        {!onboardingComplete && (
+          <div className="rounded-2xl border border-zinc-800/70 bg-amber-900/30 border-l-4 border-l-amber-400 px-5 py-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-amber-300 text-sm font-medium">Finish setting up your profile</p>
+              <p className="text-amber-500/70 text-[12px] mt-0.5">Complete your onboarding to unlock all features.</p>
             </div>
-            <div className="shrink-0">
-              <Link href="/shop" className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-sm font-semibold tracking-wide px-7 py-3.5 transition-colors duration-150 shadow-lg shadow-amber-900/20">
-                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M8 1.5a.75.75 0 0 1 .75.75V7h4.75a.75.75 0 0 1 0 1.5H8.75v4.75a.75.75 0 0 1-1.5 0V8.5H2.5a.75.75 0 0 1 0-1.5h4.75V2.25A.75.75 0 0 1 8 1.5z" /></svg>
+            <Link
+              href="/onboarding"
+              className="shrink-0 text-amber-400 text-sm font-semibold hover:text-amber-300 transition-colors duration-150 whitespace-nowrap"
+            >
+              Complete setup →
+            </Link>
+          </div>
+        )}
+
+        {/* ── Credit card ── */}
+        <div className="rounded-2xl border border-zinc-800/70 bg-zinc-900/60 overflow-hidden">
+          <div className="px-6 pt-6 pb-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] tracking-[0.18em] uppercase text-zinc-500 mb-1">Session Credits</p>
+                <div className={`text-5xl font-light tabular-nums leading-none ${creditColor}`}>
+                  {creditBalance}
+                </div>
+                {balanceIsZero && (
+                  <p className="text-red-400/80 text-[12px] mt-1.5">No credits remaining.</p>
+                )}
+                {balanceIsLow && (
+                  <p className="text-yellow-500/80 text-[12px] mt-1.5">Running low — top up soon.</p>
+                )}
+              </div>
+              <Link
+                href="/credits/buy"
+                className="rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-sm font-semibold px-4 py-2.5 transition-colors duration-150"
+                style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12)' }}
+              >
                 Buy Credits
               </Link>
             </div>
-          </div>
-          {creditBalance > 0 && (
-            <div className="h-px bg-zinc-800">
-              <div className="h-full bg-gradient-to-r from-amber-500/60 to-amber-400/30 transition-all duration-700" style={{ width: `${Math.min(100, (creditBalance / 10) * 100)}%` }} />
+            {/* Progress bar */}
+            <div className="mt-5">
+              <div className="h-1.5 w-full rounded-full bg-zinc-800 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                  style={{ width: `${creditBarPct}%` }}
+                />
+              </div>
+              <p className="text-zinc-600 text-[10px] mt-1.5 tracking-wide">{creditBalance} / 10 credits</p>
             </div>
-          )}
-        </section>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <Section title="Upcoming Sessions" count={upcomingBookings.length}>
-            {upcomingBookings.length === 0 ? <EmptyState message="No sessions scheduled yet. Your instructor will book your next one." /> : (
-              <div className="divide-y divide-zinc-800/50">
-                {upcomingBookings.map((b) => (
-                  <div key={b.id} className="px-5 py-4 flex flex-col gap-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm text-white font-medium leading-tight">{fmtDate(b.starts_at)}</span>
-                        <span className="text-xs text-zinc-500">{fmtTime(b.starts_at)}</span>
-                      </div>
-                      <span className="shrink-0 rounded-md bg-zinc-800/80 border border-zinc-700/40 px-2 py-0.5 text-[11px] text-zinc-400 tabular-nums">{fmtDuration(b.duration_minutes)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Section>
-          <Section title="Recent Sessions" count={recentSessions.length}>
-            {recentSessions.length === 0 ? <EmptyState message="No completed sessions yet. History appears here after your first lesson." /> : (
-              <div className="divide-y divide-zinc-800/50">
-                {recentSessions.map((s) => (
-                  <div key={s.id} className="px-5 py-4 flex flex-col gap-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm text-white font-medium leading-tight">{fmtDate(s.completed_at)}</span>
-                        <span className="text-xs text-zinc-500">{fmtRelative(s.completed_at)}</span>
-                      </div>
-                      <span className="shrink-0 rounded-md bg-zinc-800/80 border border-zinc-700/40 px-2 py-0.5 text-[11px] text-zinc-400 tabular-nums">{fmtDuration(s.duration_minutes)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Section>
+          </div>
         </div>
 
-        <Section title="Swing Uploads" count={recentSwingUploads.length}>
-          {recentSwingUploads.length === 0 ? <EmptyState message="No swings uploaded yet. Your instructor will add recordings after your sessions." /> : (
-            <div className="divide-y divide-zinc-800/50">
-              {recentSwingUploads.map((u, i) => (
-                <div key={u.id} className="px-5 py-3.5 flex items-center gap-4">
-                  <div className="shrink-0 w-7 h-7 rounded-full bg-zinc-800/70 border border-zinc-700/40 flex items-center justify-center text-[11px] text-zinc-500 tabular-nums">{i + 1}</div>
-                  <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                    <span className="text-sm text-zinc-200 truncate leading-tight">{u.label ?? 'Swing recording'}</span>
-                    <span className="text-[11px] text-zinc-600">{fmtDateTime(u.created_at)}</span>
+        {/* ── Upcoming bookings ── */}
+        <div className="rounded-2xl border border-zinc-800/70 bg-zinc-900/60 overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-zinc-800/60">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-zinc-500">Upcoming Sessions</p>
+          </div>
+          {upcomingBookings.length === 0 ? (
+            <p className="italic text-zinc-600 text-sm py-6 text-center">No upcoming sessions scheduled.</p>
+          ) : (
+            <ul>
+              {upcomingBookings.map((b, i) => (
+                <li
+                  key={b.id}
+                  className={[
+                    'flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-800/40 transition-colors duration-150',
+                    i < upcomingBookings.length - 1 ? 'border-b border-zinc-800/60' : '',
+                  ].join(' ')}
+                >
+                  <div className="flex-shrink-0 w-9 h-9 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                    <span className="text-amber-400 text-[11px] font-semibold">{i + 1}</span>
                   </div>
-                  <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3 text-zinc-700 shrink-0"><path d="M4.5 2.5 8 6l-3.5 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-zinc-200 text-sm font-medium truncate">{fmtDateTime(b.starts_at)}</p>
+                    <p className="text-zinc-600 text-xs mt-0.5">
+                      {fmtDuration(b.duration_minutes)}{b.location ? ` · ${b.location}` : ''}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className="inline-block text-[10px] tracking-wide uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-0.5">
+                      Booked
+                    </span>
+                  </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-        </Section>
+        </div>
+
+        {/* ── Recent sessions ── */}
+        <div className="rounded-2xl border border-zinc-800/70 bg-zinc-900/60 overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-zinc-800/60">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-zinc-500">Recent Sessions</p>
+          </div>
+          {recentSessions.length === 0 ? (
+            <p className="italic text-zinc-600 text-sm py-6 text-center">No sessions completed yet.</p>
+          ) : (
+            <ul>
+              {recentSessions.map((s, i) => (
+                <li
+                  key={s.id}
+                  className={[
+                    'px-5 py-3.5 hover:bg-zinc-800/40 transition-colors duration-150',
+                    i < recentSessions.length - 1 ? 'border-b border-zinc-800/60' : '',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-zinc-200 text-sm font-medium">{fmtRelative(s.completed_at)}</p>
+                    <span className="text-zinc-500 text-xs shrink-0">{fmtDuration(s.duration_minutes)}</span>
+                  </div>
+                  {s.notes && (
+                    <p className="text-zinc-600 text-xs mt-1 leading-relaxed line-clamp-2">{s.notes}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* ── Swing uploads ── */}
+        <div className="rounded-2xl border border-zinc-800/70 bg-zinc-900/60 overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-zinc-800/60">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-zinc-500">Swing Uploads</p>
+          </div>
+          {recentSwingUploads.length === 0 ? (
+            <p className="italic text-zinc-600 text-sm py-6 text-center">No swing uploads yet.</p>
+          ) : (
+            <ul>
+              {recentSwingUploads.map((u, i) => (
+                <li
+                  key={u.id}
+                  className={[
+                    'flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-800/40 transition-colors duration-150',
+                    i < recentSwingUploads.length - 1 ? 'border-b border-zinc-800/60' : '',
+                  ].join(' ')}
+                >
+                  {/* Numbered badge */}
+                  <div className="shrink-0 w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center">
+                    <span className="text-amber-400 text-[11px] font-semibold leading-none">{i + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-zinc-200 text-sm truncate">{u.label ?? 'Untitled swing'}</p>
+                    <p className="text-zinc-600 text-xs mt-0.5">{fmtRelative(u.created_at)}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
       </div>
     </div>
   )
@@ -173,7 +227,7 @@ export default async function DashboardPage() {
 
 function GolfFlagIcon() {
   return (
-    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" aria-hidden>
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" aria-hidden>
       <line x1="12" y1="5" x2="12" y2="35" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" />
       <path d="M12 5 L32 12 L12 19 Z" fill="#f59e0b" opacity="0.9" />
       <line x1="6" y1="35" x2="34" y2="35" stroke="#3f3f46" strokeWidth="1.5" strokeLinecap="round" />
