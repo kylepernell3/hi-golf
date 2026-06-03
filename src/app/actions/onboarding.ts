@@ -57,6 +57,7 @@ export async function submitOnboarding(
   await supabase.auth.updateUser({ data: { full_name } })
 
   // Upsert student profile with casting to work around the table inference issue
+  // The 'never[]' error usually means the from() call failed to correctly infer the table name or types
   const insertData = {
     user_id: user.id,
     full_name,
@@ -68,11 +69,11 @@ export async function submitOnboarding(
     scoring_range: profileData.scoring_range || null,
     notes: profileData.notes || null,
     onboarding_complete: true,
-  } as Database['public']['Tables']['student_profiles']['Insert']
+  }
 
   const { error: profileError } = await supabase
     .from('student_profiles')
-    .upsert(insertData, { onConflict: 'user_id' })
+    .upsert(insertData as any, { onConflict: 'user_id' })
 
   if (profileError) {
     console.error('[onboarding] profile upsert error:', profileError)
@@ -98,5 +99,5 @@ export async function getStudentProfile() {
     console.error('[getStudentProfile]', error)
   }
 
-  return data ?? null
+  return (data as any) ?? null
 }
