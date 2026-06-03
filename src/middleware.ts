@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieMethodsServer } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes that require authentication
@@ -10,7 +10,6 @@ const COACH_ROUTES = ['/admin']
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -28,7 +27,7 @@ export async function middleware(request: NextRequest) {
             supabaseResponse.cookies.set(name, value, options)
           )
         },
-      },
+      } satisfies CookieMethodsServer,
     }
   )
 
@@ -56,20 +55,22 @@ export async function middleware(request: NextRequest) {
       .select('role')
       .eq('id', user.id)
       .single()
-
-    if (!userData || !['coach', 'admin'].includes(userData.role)) {
+    
+    const role = (userData as any)?.role
+    if (!role || !['coach', 'admin'].includes(role)) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
 
   // Redirect authenticated users who haven't completed onboarding
   if (pathname.startsWith('/dashboard') && user) {
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from('student_profiles')
       .select('onboarding_complete')
       .eq('user_id', user.id)
-      .single()
-
+      .maybeSingle()
+    
+    const profile = profileData as any
     if (profile && !profile.onboarding_complete && pathname !== '/onboarding') {
       return NextResponse.redirect(new URL('/onboarding', request.url))
     }
