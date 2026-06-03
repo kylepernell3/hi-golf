@@ -107,7 +107,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
 
   return {
     creditBalance,
-    upcomingBookings: (upcomingResult.data ?? []).map(b => ({
+    upcomingBookings: (upcomingResult.data ?? []).map((b: any) => ({
       id: b.id,
       scheduled_at: b.scheduled_at,
       duration_minutes: b.duration_minutes,
@@ -115,7 +115,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       notes: b.student_notes,
       credits_debited: 1 // Default or derived if field missing
     })),
-    recentSessions: (recentResult.data ?? []).map(b => ({
+    recentSessions: (recentResult.data ?? []).map((b: any) => ({
       id: b.id,
       scheduled_at: b.scheduled_at,
       duration_minutes: b.duration_minutes,
