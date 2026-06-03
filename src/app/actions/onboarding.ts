@@ -3,9 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
-import type { Database, Handedness, SkillLevel } from '@/types/database'
-
-type StudentProfileInsert = Database['public']['Tables']['student_profiles']['Insert']
 
 const OnboardingSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
@@ -53,28 +50,29 @@ export async function submitOnboarding(
     }
   }
 
-  const { full_name, ...profileData } = parsed.data
+  const { full_name, phone, handedness, skill_level, goals, handicap, scoring_range, notes } = parsed.data
 
   // Update auth user display name
   await supabase.auth.updateUser({ data: { full_name } })
 
-  // Upsert student profile using properly typed Insert payload
-  const insertData: StudentProfileInsert = {
-    user_id: user.id,
-    full_name,
-    phone: profileData.phone || null,
-    handedness: (profileData.handedness as Handedness) ?? 'unknown',
-    skill_level: (profileData.skill_level as SkillLevel) ?? 'beginner',
-    goals: profileData.goals || null,
-    handicap: profileData.handicap ?? null,
-    scoring_range: profileData.scoring_range || null,
-    notes: profileData.notes || null,
-    onboarding_complete: true,
-  }
-
+  // Upsert student profile — inline object so Supabase TS can infer table shape
   const { error: profileError } = await supabase
     .from('student_profiles')
-    .upsert(insertData, { onConflict: 'user_id' })
+    .upsert(
+      {
+        user_id: user.id,
+        full_name: full_name,
+        phone: phone || null,
+        handedness: handedness as 'right' | 'left' | 'unknown',
+        skill_level: skill_level as 'beginner' | 'intermediate' | 'advanced' | 'scratch',
+        goals: goals || null,
+        handicap: handicap ?? null,
+        scoring_range: scoring_range || null,
+        notes: notes || null,
+        onboarding_complete: true,
+      },
+      { onConflict: 'user_id' }
+    )
 
   if (profileError) {
     console.error('[onboarding] profile upsert error:', profileError)
