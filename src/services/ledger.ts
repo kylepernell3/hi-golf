@@ -4,9 +4,7 @@
  * Every entry is append-only; the balance is derived via SUM(amount).
  */
 import { createAdminClient } from '@/lib/supabase/server'
-import type { Database, LedgerEntryType } from '@/types/database'
-
-type LedgerInsert = Database['public']['Tables']['credit_ledger']['Insert']
+import type { LedgerEntryType } from '@/types/database'
 
 interface LedgerEntryInput {
   studentId: string
@@ -19,20 +17,19 @@ interface LedgerEntryInput {
 
 /** Append a single ledger entry using the service-role client */
 export async function appendLedgerEntry(input: LedgerEntryInput) {
-  const supabase = await createAdminClient()
-
-  const insertPayload: LedgerInsert = {
-    user_id: input.studentId,
-    amount: input.amount,
-    type: input.type,
-    description: input.description ?? null,
-    booking_id: input.bookingId ?? null,
-    stripe_session_id: input.stripeSessionId ?? null,
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = await createAdminClient() as any
 
   const { data, error } = await supabase
     .from('credit_ledger')
-    .insert(insertPayload)
+    .insert({
+      user_id: input.studentId,
+      amount: input.amount,
+      type: input.type,
+      description: input.description ?? null,
+      booking_id: input.bookingId ?? null,
+      stripe_session_id: input.stripeSessionId ?? null,
+    })
     .select()
     .single()
 
@@ -42,7 +39,8 @@ export async function appendLedgerEntry(input: LedgerEntryInput) {
 
 /** Get the current credit balance for a student */
 export async function getStudentBalance(studentId: string): Promise<number> {
-  const supabase = await createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = await createAdminClient() as any
 
   const { data, error } = await supabase
     .from('credit_ledger')
@@ -51,7 +49,7 @@ export async function getStudentBalance(studentId: string): Promise<number> {
 
   if (error) throw new Error(`Balance fetch failed: ${error.message}`)
 
-  const balance = (data ?? []).reduce((sum, row) => sum + (row.amount ?? 0), 0)
+  const balance = (data ?? []).reduce((sum: number, row: { amount: number | null }) => sum + (row.amount ?? 0), 0)
   return balance
 }
 
@@ -86,7 +84,6 @@ export async function debitBooking({
   if (balance < 1) {
     throw new Error('Insufficient credits')
   }
-
   return appendLedgerEntry({
     studentId,
     amount: -1,
