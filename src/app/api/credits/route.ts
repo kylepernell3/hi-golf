@@ -8,7 +8,8 @@ export async function GET() {
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Fetch balance from student_credit_balances view
-  const { data: balanceData, error: balanceError } = await supabase
+  // Cast to any to handle missing types for view
+  const { data: balanceRaw, error: balanceError } = await (supabase as any)
     .from('student_credit_balances')
     .select('balance')
     .eq('student_id', user.id)
@@ -18,7 +19,7 @@ export async function GET() {
     return NextResponse.json({ error: balanceError.message }, { status: 500 })
   }
 
-  const balance = balanceData?.balance ?? 0
+  const balance: number = (balanceRaw as { balance: number } | null)?.balance ?? 0
 
   // Fetch ledger history (append-only, read-only)
   const { data: ledger, error: ledgerError } = await supabase
