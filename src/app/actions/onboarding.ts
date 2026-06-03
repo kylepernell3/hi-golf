@@ -1,7 +1,9 @@
 'use server'
+
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import type { Database } from '@/types/database'
 
 const OnboardingSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
@@ -43,7 +45,6 @@ export async function submitOnboarding(
   }
 
   const parsed = OnboardingSchema.safeParse(raw)
-
   if (!parsed.success) {
     return {
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
@@ -55,19 +56,23 @@ export async function submitOnboarding(
   // Update auth user display name
   await supabase.auth.updateUser({ data: { full_name } })
 
-  // Upsert student profile
-  // Note: We use any here to avoid typing issues with onboarding_complete while schema stabilizes
+  // Upsert student profile with proper typing
+  const insertData: Database['public']['Tables']['student_profiles']['Insert'] = {
+    user_id: user.id,
+    full_name,
+    phone: profileData.phone || null,
+    handedness: profileData.handedness,
+    skill_level: profileData.skill_level,
+    goals: profileData.goals || null,
+    handicap: profileData.handicap,
+    scoring_range: profileData.scoring_range || null,
+    notes: profileData.notes || null,
+    onboarding_complete: true,
+  }
+
   const { error: profileError } = await supabase
     .from('student_profiles')
-    .upsert(
-      {
-        user_id: user.id,
-        full_name,
-        ...profileData,
-        onboarding_complete: true,
-      } as any,
-      { onConflict: 'user_id' }
-    )
+    .upsert(insertData, { onConflict: 'user_id' })
 
   if (profileError) {
     console.error('[onboarding] profile upsert error:', profileError)
