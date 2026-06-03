@@ -66,13 +66,13 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users who haven't completed onboarding
   if (pathname.startsWith('/dashboard') && user) {
-    const { data: profile } = await supabase
+    const { data: profileRaw } = await supabase
       .from('student_profiles')
       .select('onboarding_complete')
       .eq('user_id', user.id)
       .maybeSingle()
     
-    if (profile && !profile.onboarding_complete && pathname !== '/onboarding') {
+    if (profileRaw && !(profileRaw as any).onboarding_complete && pathname !== '/onboarding') {
       return NextResponse.redirect(new URL('/onboarding', request.url))
     }
   }
