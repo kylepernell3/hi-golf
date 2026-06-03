@@ -5,7 +5,7 @@
  */
 import { createAdminClient } from '@/lib/supabase/server'
 import { debitBooking, refundCancellation, getStudentBalance } from './ledger'
-import type { BookingStatus } from '@/lib/supabase/types'
+import type { BookingStatus } from '@/types/database'
 
 export interface CreateBookingInput {
   studentId: string
@@ -37,7 +37,7 @@ export async function createBooking(input: CreateBookingInput) {
       student_id: input.studentId,
       coach_id: input.coachId ?? null,
       scheduled_at: input.scheduledAt,
-      duration_mins: input.durationMins ?? 60,
+      duration_minutes: input.durationMins ?? 60,
       status: 'pending' as BookingStatus,
       location: input.location ?? null,
       student_notes: input.studentNotes ?? null,
@@ -121,7 +121,7 @@ export async function cancelBooking(input: { bookingId: string; studentId: strin
 
   // 2. Issue refund via ledger (if a credit was actually used)
   if (booking.ledger_entry_id) {
-    await await refundCancellation({
+    await refundCancellation({
       studentId: booking.student_id,
       bookingId: booking.id,
     })
