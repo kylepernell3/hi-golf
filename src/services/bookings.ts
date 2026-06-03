@@ -5,7 +5,10 @@
  */
 import { createAdminClient } from '@/lib/supabase/server'
 import { debitBooking, refundCancellation, getStudentBalance } from './ledger'
-import type { BookingStatus } from '@/types/database'
+import type { Database, BookingStatus } from '@/types/database'
+
+type BookingInsert = Database['public']['Tables']['bookings']['Insert']
+type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 
 export interface CreateBookingInput {
   studentId: string
@@ -31,39 +34,42 @@ export async function createBooking(input: CreateBookingInput) {
   }
 
   // 2. Create booking in pending status
+  const insertPayload: BookingInsert = {
+    student_id: input.studentId,
+    coach_id: input.coachId ?? null,
+    scheduled_at: input.scheduledAt,
+    duration_minutes: input.durationMins ?? 60,
+    status: 'pending' as BookingStatus,
+    location: input.location ?? null,
+    student_notes: input.studentNotes ?? null,
+  }
+
   const { data: bookingRaw, error: bookingError } = await supabase
     .from('bookings')
-    .insert(({
-      student_id: input.studentId,
-      coach_id: input.coachId ?? null,
-      scheduled_at: input.scheduledAt,
-      duration_minutes: input.durationMins ?? 60,
-      status: 'pending' as BookingStatus,
-      location: input.location ?? null,
-      student_notes: input.studentNotes ?? null,
-    }) as any)
+    .insert(insertPayload)
     .select()
     .single()
 
-  const booking = bookingRaw as any
-      if (bookingError || !booking) {
+  if (bookingError || !bookingRaw) {
     throw new Error(`Booking creation failed: ${bookingError?.message}`)
   }
 
   // 3. Debit credit (validates balance again inside)
   const ledgerEntry = await debitBooking({
     studentId: input.studentId,
-    bookingId: booking.id,
+    bookingId: bookingRaw.id,
   })
 
   // 4. Update booking to confirmed and link ledger entry
+  const updatePayload: BookingUpdate = {
+    status: 'confirmed' as BookingStatus,
+    ledger_entry_id: ledgerEntry.id,
+  }
+
   const { data: confirmedBooking, error: updateError } = await supabase
     .from('bookings')
-    .update(({
-      status: 'confirmed' as BookingStatus,
-      ledger_entry_id: ledgerEntry.id,
-    }) as any)
-    .eq('id', booking.id)
+    .update(updatePayload)
+    .eq('id', bookingRaw.id)
     .select()
     .single()
 
@@ -105,15 +111,18 @@ export async function cancelBooking(input: { bookingId: string; studentId: strin
   const scheduledTime = new Date(booking.scheduled_at).getTime()
   const now = Date.now()
   const hoursRemaining = (scheduledTime - now) / (1000 * 60 * 60)
-
   if (hoursRemaining < 24) {
     throw new Error('Cancellations must be made at least 24 hours in advance.')
   }
 
   // 1. Mark as cancelled
+  const cancelPayload: BookingUpdate = {
+    status: 'cancelled' as BookingStatus,
+  }
+
   const { error: cancelError } = await supabase
     .from('bookings')
-    .update(({ status: 'cancelled' as BookingStatus }) as any)
+    .update(cancelPayload)
     .eq('id', input.bookingId)
 
   if (cancelError) {
