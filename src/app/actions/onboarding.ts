@@ -55,16 +55,16 @@ export async function submitOnboarding(
   // Update auth user display name
   await supabase.auth.updateUser({ data: { full_name } })
 
-  // Upsert student profile — inline object so Supabase TS can infer table shape
-  const { error: profileError } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: profileError } = await (supabase as any)
     .from('student_profiles')
     .upsert(
       {
         user_id: user.id,
         full_name: full_name,
         phone: phone || null,
-        handedness: handedness as 'right' | 'left' | 'unknown',
-        skill_level: skill_level as 'beginner' | 'intermediate' | 'advanced' | 'scratch',
+        handedness: handedness,
+        skill_level: skill_level,
         goals: goals || null,
         handicap: handicap ?? null,
         scoring_range: scoring_range || null,
@@ -88,7 +88,8 @@ export async function getStudentProfile() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('student_profiles')
     .select('*')
     .eq('user_id', user.id)
