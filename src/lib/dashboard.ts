@@ -95,8 +95,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     0
   )
 
-  // Cast profile data to avoid TS 'never' inference on partial selects
-  const profile = profileResult.data as { onboarding_complete: boolean } | null
+  const profile = profileResult.data as any
 
   return {
     creditBalance,
