@@ -22,7 +22,7 @@ export async function appendLedgerEntry(input: LedgerEntryInput) {
 
   const { data, error } = await supabase
     .from('credit_ledger')
-    .insert({
+    .insert(({
       student_id: input.studentId,
       delta: input.delta,
       entry_type: input.entryType,
@@ -30,7 +30,7 @@ export async function appendLedgerEntry(input: LedgerEntryInput) {
       booking_id: input.bookingId ?? null,
       stripe_payment_intent_id: input.stripePaymentIntentId ?? null,
       note: input.note ?? null,
-    })
+    }) as any)
     .select()
     .single()
 
