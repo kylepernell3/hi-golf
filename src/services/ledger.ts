@@ -1,36 +1,38 @@
 /**
  * Credit Ledger Service
  * All credit mutations go through here — never update a balance directly.
- * Every entry is append-only; the balance is derived via SUM(delta).
+ * Every entry is append-only; the balance is derived via SUM(amount).
  */
 import { createAdminClient } from '@/lib/supabase/server'
-import type { LedgerEntryType } from '@/lib/supabase/types'
+import type { Database, LedgerEntryType } from '@/types/database'
+
+type LedgerInsert = Database['public']['Tables']['credit_ledger']['Insert']
 
 interface LedgerEntryInput {
   studentId: string
-  delta: number
-  entryType: LedgerEntryType
-  productId?: string
+  amount: number
+  type: LedgerEntryType
+  description?: string
   bookingId?: string
-  stripePaymentIntentId?: string
-  note?: string
+  stripeSessionId?: string
 }
 
 /** Append a single ledger entry using the service-role client */
 export async function appendLedgerEntry(input: LedgerEntryInput) {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
+
+  const insertPayload: LedgerInsert = {
+    user_id: input.studentId,
+    amount: input.amount,
+    type: input.type,
+    description: input.description ?? null,
+    booking_id: input.bookingId ?? null,
+    stripe_session_id: input.stripeSessionId ?? null,
+  }
 
   const { data, error } = await supabase
     .from('credit_ledger')
-    .insert(({
-      student_id: input.studentId,
-      delta: input.delta,
-      entry_type: input.entryType,
-      product_id: input.productId ?? null,
-      booking_id: input.bookingId ?? null,
-      stripe_payment_intent_id: input.stripePaymentIntentId ?? null,
-      note: input.note ?? null,
-    }) as any)
+    .insert(insertPayload)
     .select()
     .single()
 
@@ -40,37 +42,35 @@ export async function appendLedgerEntry(input: LedgerEntryInput) {
 
 /** Get the current credit balance for a student */
 export async function getStudentBalance(studentId: string): Promise<number> {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase
-    .from('student_credit_balances')
-    .select('balance')
-    .eq('student_id', studentId)
-    .maybeSingle()
+    .from('credit_ledger')
+    .select('amount')
+    .eq('user_id', studentId)
 
   if (error) throw new Error(`Balance fetch failed: ${error.message}`)
-  return data?.balance ?? 0
+
+  const balance = (data ?? []).reduce((sum, row) => sum + (row.amount ?? 0), 0)
+  return balance
 }
 
 /** Credit a student after a successful Stripe payment */
 export async function creditPurchase({
   studentId,
   sessionsIncluded,
-  productId,
-  stripePaymentIntentId,
+  stripeSessionId,
 }: {
   studentId: string
   sessionsIncluded: number
-  productId: string
-  stripePaymentIntentId: string
+  stripeSessionId: string
 }) {
   return appendLedgerEntry({
     studentId,
-    delta: sessionsIncluded,
-    entryType: 'purchase',
-    productId,
-    stripePaymentIntentId,
-    note: `Purchased ${sessionsIncluded} session(s)`,
+    amount: sessionsIncluded,
+    type: 'purchase',
+    stripeSessionId,
+    description: `Purchased ${sessionsIncluded} session(s)`,
   })
 }
 
@@ -86,12 +86,13 @@ export async function debitBooking({
   if (balance < 1) {
     throw new Error('Insufficient credits')
   }
+
   return appendLedgerEntry({
     studentId,
-    delta: -1,
-    entryType: 'booking_debit',
+    amount: -1,
+    type: 'booking_debit',
     bookingId,
-    note: 'Booking confirmed — 1 session debited',
+    description: 'Booking confirmed — 1 session debited',
   })
 }
 
@@ -105,9 +106,9 @@ export async function refundCancellation({
 }) {
   return appendLedgerEntry({
     studentId,
-    delta: 1,
-    entryType: 'cancellation_refund',
+    amount: 1,
+    type: 'cancellation_refund',
     bookingId,
-    note: 'Booking cancelled — 1 session refunded',
+    description: 'Booking cancelled — 1 session refunded',
   })
 }
