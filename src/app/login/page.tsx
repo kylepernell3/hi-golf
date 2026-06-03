@@ -1,142 +1,243 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
 
-async function sendMagicLink(formData: FormData) {
-  'use server'
-  const email = (formData.get('email') as string)?.trim()
-  if (!email) redirect('/login?error=email-required&mode=magic')
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback` },
-  })
-  if (error) { console.error('[login] OTP error:', error.message); redirect('/login?error=send-failed&mode=magic') }
-  redirect('/login?sent=1&mode=magic')
-}
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
-async function signInWithPassword(formData: FormData) {
-  'use server'
-  const email = (formData.get('email') as string)?.trim()
-  const password = formData.get('password') as string
-  if (!email || !password) redirect('/login?error=fields-required&mode=password')
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) { console.error('[login] Password error:', error.message); redirect('/login?error=invalid-credentials&mode=password') }
-  redirect('/dashboard')
-}
+// ── Inner component uses useSearchParams (needs Suspense boundary) ──
+function LoginForm() {
+  const router      = useRouter()
+  const searchParams = useSearchParams()
 
-const ERROR_COPY: Record<string, string> = {
-  'email-required': 'Please enter your email address.',
-  'send-failed': "We couldn't send a login link. Please try again.",
-  'fields-required': 'Please enter both your email and password.',
-  'invalid-credentials': 'Incorrect email or password.',
-}
+  const [mode, setMode]       = useState<'magic' | 'password'>(
+    searchParams.get('mode') === 'password' ? 'password' : 'magic'
+  )
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState<string | null>(null)
+  const [success, setSuccess]   = useState<string | null>(null)
 
-const inputCls = 'w-full rounded-lg bg-zinc-800/70 border border-zinc-700/50 px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-colors duration-150'
-const labelCls = 'block text-[10px] tracking-[0.18em] uppercase text-zinc-500 mb-1.5'
+  const supabase = createClient()
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ sent?: string; error?: string; mode?: string }> }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect('/dashboard')
-  const params = await searchParams
-  const sent = params.sent === '1'
-  const errKey = params.error ?? ''
-  const errMsg = errKey ? (ERROR_COPY[errKey] ?? 'Something went wrong.') : null
-  const mode = params.mode === 'password' ? 'password' : 'magic'
+  // Redirect if already authenticated
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) router.replace('/dashboard')
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function switchMode(next: 'magic' | 'password') {
+    setMode(next)
+    setError(null)
+    setSuccess(null)
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    if (mode === 'magic') {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      })
+      if (error) setError(error.message)
+      else setSuccess("Check your inbox — we've sent a magic link.")
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) setError(error.message)
+      else router.replace('/dashboard')
+    }
+
+    setLoading(false)
+  }
+
   return (
-    <>
-      {/* Enhancement 4: thin top gradient bar */}
-      <div
-        aria-hidden
-        className="fixed top-0 left-0 right-0 z-50 h-px pointer-events-none"
-        style={{ background: 'linear-gradient(to right, transparent 0%, rgba(120,53,15,0.40) 30%, rgba(180,83,9,0.40) 50%, rgba(120,53,15,0.40) 70%, transparent 100%)' }}
-      />
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-12">
 
-      <div className="relative min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-5 py-20 overflow-hidden">
-        {/* Existing gold glow at top */}
-        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 50% at 50% -5%, rgba(217,119,6,0.08) 0%, transparent 65%)' }} />
-
-        {/* Enhancement 2: subtle green radial glow at bottom */}
-        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 40% at 50% 105%, rgba(5,150,105,0.04) 0%, transparent 65%)' }} />
-
-        <div className="relative w-full max-w-[380px] flex flex-col items-center gap-10">
-          <div className="flex flex-col items-center gap-3 select-none">
-            <GolfFlagIcon />
-            <div className="flex flex-col items-center gap-1">
-              <h1 className="text-white font-light tracking-[0.24em] text-[1.85rem] leading-none" style={{ fontFamily: 'Georgia, serif' }}>HI GOLF</h1>
-              {/* Enhancement 3: two-line tagline */}
-              <span className="text-[9px] tracking-[0.35em] uppercase text-zinc-600">Student Portal</span>
-              <span className="text-[8px] tracking-[0.28em] uppercase text-stone-500 mt-0.5">Elevate Your Game</span>
-            </div>
-          </div>
-
-          {/* Enhancement 1: left green accent bar via relative wrapper */}
-          <div className="w-full relative">
-            {/* Left-side vertical green accent bar */}
-            <div
-              aria-hidden
-              className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl z-10 pointer-events-none"
-              style={{ background: 'linear-gradient(to bottom, rgba(5,150,105,0.30) 0%, rgba(16,185,129,0.60) 50%, rgba(5,150,105,0.30) 100%)' }}
-            />
-
-            <div className="w-full rounded-2xl border border-zinc-800/70 bg-zinc-900/50 backdrop-blur-md overflow-hidden shadow-2xl shadow-black/40">
-              <div className="relative flex border-b border-zinc-800/80">
-                <a href="/login?mode=magic" className={['flex-1 text-center py-3.5 text-[10px] tracking-[0.18em] uppercase transition-colors duration-150', mode === 'magic' ? 'text-amber-400 font-medium' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}>Magic Link</a>
-                <a href="/login?mode=password" className={['flex-1 text-center py-3.5 text-[10px] tracking-[0.18em] uppercase transition-colors duration-150', mode === 'password' ? 'text-amber-400 font-medium' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}>Password</a>
-                <div aria-hidden className="absolute bottom-0 h-px bg-amber-500/80 transition-all duration-200" style={{ width: '50%', left: mode === 'magic' ? '0%' : '50%' }} />
-              </div>
-              <div className="p-7 pt-6">
-                {errMsg && <div className="mb-5 rounded-lg border border-red-900/50 bg-red-950/40 px-4 py-3"><p className="text-[13px] text-red-300">{errMsg}</p></div>}
-                {sent && mode === 'magic' && <div className="mb-5 rounded-lg border border-emerald-800/50 bg-emerald-950/40 px-4 py-3"><p className="text-[13px] text-emerald-300">Link sent. Check your inbox and click to sign in.</p></div>}
-                {mode === 'magic' && (
-                  <form action={sendMagicLink} className="flex flex-col gap-4">
-                    <label htmlFor="email-otp" className={labelCls}>Email Address</label>
-                    <input id="email-otp" name="email" type="email" required autoComplete="email" placeholder="you@example.com" className={inputCls} />
-                    {/* Enhancement 5: inner shadow + ⛳ emoji on button */}
-                    <button
-                      type="submit"
-                      className="mt-1 w-full rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-sm font-semibold tracking-wide py-2.5 transition-colors duration-150"
-                      style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12)' }}
-                    >
-                      ⛳ Send Login Link
-                    </button>
-                    <p className="text-center text-[11px] text-zinc-600 mt-0.5">We'll email you a secure one-time link.<br />No password required.</p>
-                  </form>
-                )}
-                {mode === 'password' && (
-                  <form action={signInWithPassword} className="flex flex-col gap-4">
-                    <label htmlFor="email-pw" className={labelCls}>Email Address</label>
-                    <input id="email-pw" name="email" type="email" required autoComplete="email" placeholder="you@example.com" className={inputCls} />
-                    <label htmlFor="password" className={labelCls}>Password</label>
-                    <input id="password" name="password" type="password" required autoComplete="current-password" placeholder="••••••••" className={inputCls} />
-                    {/* Enhancement 5: inner shadow + ⛳ emoji on button */}
-                    <button
-                      type="submit"
-                      className="mt-1 w-full rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-sm font-semibold tracking-wide py-2.5 transition-colors duration-150"
-                      style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12)' }}
-                    >
-                      ⛳ Sign In
-                    </button>
-                  </form>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <p className="text-[11px] text-zinc-700 text-center">Access is by invitation only.<br />Contact your instructor to get set up.</p>
-        </div>
+      {/* Ambient glows */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden>
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[450px] rounded-full bg-amber-500/5 blur-3xl" />
+        <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[700px] h-[450px] rounded-full bg-emerald-500/[0.04] blur-3xl" />
       </div>
-    </>
+
+      <div className="relative z-10 w-full max-w-sm">
+
+        {/* ── Brand ───────────────────────────────────────────────── */}
+        <div className="text-center mb-10">
+          {/* Decorative mark */}
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-5">
+            <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7 text-amber-500" aria-hidden>
+              <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.8"/>
+              <path d="M12 11.5V20M8 20h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M6 15.5c1.5-1 3.5-1.5 6-1.5s4.5.5 6 1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </div>
+
+          <h1
+            className="text-4xl font-bold tracking-tight text-white leading-none"
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            Hi<span className="text-amber-500"> Golf</span>
+          </h1>
+          <p className="text-zinc-500 text-sm mt-2.5 leading-relaxed">
+            Private instruction.<br className="hidden sm:block" /> Exceptional results.
+          </p>
+        </div>
+
+        {/* ── Card ────────────────────────────────────────────────── */}
+        <div className="bg-zinc-900/60 border border-zinc-800/70 rounded-2xl p-8 shadow-2xl shadow-black/40">
+
+          {/* Tab toggles */}
+          <div
+            className="flex bg-zinc-800/60 rounded-xl p-1 mb-7"
+            role="tablist"
+            aria-label="Sign-in method"
+          >
+            {(['magic', 'password'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={mode === tab}
+                onClick={() => switchMode(tab)}
+                className={`
+                  flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-150
+                  ${mode === tab
+                    ? 'bg-zinc-700 text-white shadow-sm shadow-black/30'
+                    : 'text-zinc-400 hover:text-zinc-200'}
+                `}
+              >
+                {tab === 'magic' ? 'Magic Link' : 'Password'}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="space-y-4">
+
+              {/* Email */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-1.5">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="
+                    w-full bg-zinc-800/60 border border-zinc-700/50 rounded-xl
+                    px-4 py-3 text-white text-sm placeholder-zinc-600
+                    focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50
+                    transition-all duration-150
+                  "
+                />
+              </div>
+
+              {/* Password (conditional) */}
+              {mode === 'password' && (
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-zinc-300 mb-1.5">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="
+                      w-full bg-zinc-800/60 border border-zinc-700/50 rounded-xl
+                      px-4 py-3 text-white text-sm placeholder-zinc-600
+                      focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50
+                      transition-all duration-150
+                    "
+                  />
+                </div>
+              )}
+
+              {/* Error state */}
+              {error && (
+                <div className="flex items-start gap-2.5 bg-red-500/8 border border-red-500/20 rounded-xl px-4 py-3">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-red-400 mt-0.5 shrink-0" aria-hidden>
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd"/>
+                  </svg>
+                  <p className="text-red-400 text-sm leading-snug">{error}</p>
+                </div>
+              )}
+
+              {/* Success state */}
+              {success && (
+                <div className="flex items-start gap-2.5 bg-emerald-500/8 border border-emerald-500/20 rounded-xl px-4 py-3">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" aria-hidden>
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd"/>
+                  </svg>
+                  <p className="text-emerald-400 text-sm leading-snug">{success}</p>
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="
+                  w-full mt-1 py-3 rounded-xl bg-amber-500 text-zinc-950
+                  text-sm font-semibold transition-all duration-150
+                  hover:opacity-90 active:scale-[0.98]
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                "
+                style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12)' }}
+              >
+                {loading
+                  ? 'Please wait…'
+                  : mode === 'magic'
+                    ? 'Send Magic Link'
+                    : 'Sign In'}
+              </button>
+
+            </div>
+          </form>
+
+          {/* Mode hint */}
+          {mode === 'magic' && !success && (
+            <p className="text-center text-zinc-600 text-xs mt-5 leading-relaxed">
+              We'll email you a one-click sign-in link.
+              <br />No password needed.
+            </p>
+          )}
+
+        </div>
+
+        {/* ── Footer ──────────────────────────────────────────────── */}
+        <p className="text-center text-zinc-700 text-xs mt-7 leading-relaxed px-2">
+          Hi Golf is an <span className="text-zinc-500">invitation-only</span> platform.
+          <br />
+          Access requires a valid account issued by your coach.
+        </p>
+
+      </div>
+    </div>
   )
 }
 
-function GolfFlagIcon() {
+// ── Suspense wrapper required for useSearchParams ────────────────────
+export default function LoginPage() {
   return (
-    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9" aria-hidden>
-      <line x1="12" y1="5" x2="12" y2="35" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M12 5 L32 12 L12 19 Z" fill="#f59e0b" opacity="0.9" />
-      <line x1="6" y1="35" x2="34" y2="35" stroke="#3f3f46" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <Suspense fallback={
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
