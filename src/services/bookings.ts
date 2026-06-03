@@ -59,10 +59,10 @@ export async function createBooking(input: CreateBookingInput) {
   // 4. Update booking to confirmed and link ledger entry
   const { data: confirmedBooking, error: updateError } = await supabase
     .from('bookings')
-    .update({
+    .update(({
       status: 'confirmed' as BookingStatus,
       ledger_entry_id: ledgerEntry.id,
-    })
+    }) as any)
     .eq('id', booking.id)
     .select()
     .single()
@@ -113,7 +113,7 @@ export async function cancelBooking(input: { bookingId: string; studentId: strin
   // 1. Mark as cancelled
   const { error: cancelError } = await supabase
     .from('bookings')
-    .update({ status: 'cancelled' as BookingStatus })
+    .update(({ status: 'cancelled' as BookingStatus }) as any)
     .eq('id', input.bookingId)
 
   if (cancelError) {
