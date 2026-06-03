@@ -1,3 +1,15 @@
+export type UserRole = 'student' | 'coach' | 'admin'
+export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'scratch'
+export type Handedness = 'right' | 'left' | 'unknown'
+export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
+export type LedgerEntryType =
+  | 'purchase'
+  | 'booking_debit'
+  | 'cancellation_refund'
+  | 'manual_credit'
+  | 'manual_debit'
+  | 'promo'
+
 export type Database = {
   public: {
     Tables: {
@@ -7,7 +19,7 @@ export type Database = {
           email: string
           full_name: string | null
           avatar_url: string | null
-          role: 'student' | 'coach' | 'admin'
+          role: UserRole
           created_at: string
           updated_at: string
         }
@@ -16,19 +28,11 @@ export type Database = {
           email: string
           full_name?: string | null
           avatar_url?: string | null
-          role?: 'student' | 'coach' | 'admin'
+          role?: UserRole
           created_at?: string
           updated_at?: string
         }
-        Update: {
-          id?: string
-          email?: string
-          full_name?: string | null
-          avatar_url?: string | null
-          role?: 'student' | 'coach' | 'admin'
-          created_at?: string
-          updated_at?: string
-        }
+        Update: Partial<Database['public']['Tables']['users']['Insert']>
       }
       student_profiles: {
         Row: {
@@ -36,8 +40,8 @@ export type Database = {
           user_id: string
           full_name: string | null
           phone: string | null
-          handedness: 'right' | 'left' | 'unknown'
-          skill_level: 'beginner' | 'intermediate' | 'advanced' | 'scratch'
+          handedness: Handedness
+          skill_level: SkillLevel
           goals: string | null
           handicap: number | null
           scoring_range: string | null
@@ -51,8 +55,8 @@ export type Database = {
           user_id: string
           full_name?: string | null
           phone?: string | null
-          handedness?: 'right' | 'left' | 'unknown'
-          skill_level?: 'beginner' | 'intermediate' | 'advanced' | 'scratch'
+          handedness?: Handedness
+          skill_level?: SkillLevel
           goals?: string | null
           handicap?: number | null
           scoring_range?: string | null
@@ -61,21 +65,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Update: {
-          id?: string
-          user_id?: string
-          full_name?: string | null
-          phone?: string | null
-          handedness?: 'right' | 'left' | 'unknown'
-          skill_level?: 'beginner' | 'intermediate' | 'advanced' | 'scratch'
-          goals?: string | null
-          handicap?: number | null
-          scoring_range?: string | null
-          notes?: string | null
-          onboarding_complete?: boolean
-          created_at?: string
-          updated_at?: string
-        }
+        Update: Partial<Database['public']['Tables']['student_profiles']['Insert']>
       }
       bookings: {
         Row: {
@@ -84,7 +74,7 @@ export type Database = {
           coach_id: string | null
           scheduled_at: string
           duration_minutes: number
-          status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
+          status: BookingStatus
           location: string | null
           student_notes: string | null
           coach_notes: string | null
@@ -98,7 +88,7 @@ export type Database = {
           coach_id?: string | null
           scheduled_at: string
           duration_minutes?: number
-          status?: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
+          status?: BookingStatus
           location?: string | null
           student_notes?: string | null
           coach_notes?: string | null
@@ -106,27 +96,14 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Update: {
-          id?: string
-          student_id?: string
-          coach_id?: string | null
-          scheduled_at?: string
-          duration_minutes?: number
-          status?: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
-          location?: string | null
-          student_notes?: string | null
-          coach_notes?: string | null
-          ledger_entry_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+        Update: Partial<Database['public']['Tables']['bookings']['Insert']>
       }
       credit_ledger: {
         Row: {
           id: string
           user_id: string
           amount: number
-          type: 'purchase' | 'booking_debit' | 'cancellation_refund' | 'manual_credit' | 'manual_debit' | 'promo'
+          type: LedgerEntryType
           description: string | null
           booking_id: string | null
           stripe_session_id: string | null
@@ -136,22 +113,13 @@ export type Database = {
           id?: string
           user_id: string
           amount: number
-          type: 'purchase' | 'booking_debit' | 'cancellation_refund' | 'manual_credit' | 'manual_debit' | 'promo'
+          type: LedgerEntryType
           description?: string | null
           booking_id?: string | null
           stripe_session_id?: string | null
           created_at?: string
         }
-        Update: {
-          id?: string
-          user_id?: string
-          amount?: number
-          type?: 'purchase' | 'booking_debit' | 'cancellation_refund' | 'manual_credit' | 'manual_debit' | 'promo'
-          description?: string | null
-          booking_id?: string | null
-          stripe_session_id?: string | null
-          created_at?: string
-        }
+        Update: Partial<Database['public']['Tables']['credit_ledger']['Insert']>
       }
       swing_uploads: {
         Row: {
@@ -172,15 +140,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Update: {
-          id?: string
-          user_id?: string
-          file_url?: string
-          coach_notes?: string | null
-          status?: 'pending' | 'reviewed'
-          created_at?: string
-          updated_at?: string
-        }
+        Update: Partial<Database['public']['Tables']['swing_uploads']['Insert']>
       }
     }
     Views: {
