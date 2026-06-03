@@ -3,11 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import stripe from "@/lib/stripe";
 import Stripe from "stripe";
 
-// In the App Router, the request body is NOT auto-parsed —
-// req.text() returns the raw body string Stripe needs for signature verification.
-
 export async function POST(req: NextRequest) {
-  // --- Raw body + signature ---
   const rawBody = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -18,9 +14,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // --- Verify webhook signature ---
   let event: Stripe.Event;
-
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -35,17 +29,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // --- Only handle checkout.session.completed for Release 1 ---
   if (event.type !== "checkout.session.completed") {
-    // Acknowledge all other event types without error so Stripe stops retrying them.
     return NextResponse.json({ received: true });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-
-  // --- Validate required metadata ---
-  const { student_id, product_id, sessions_included } =
-    session.metadata ?? {};
+  const { student_id, product_id, sessions_included } = session.metadata ?? {};
 
   if (!student_id || !product_id || !sessions_included) {
     console.error(
@@ -53,8 +42,6 @@ export async function POST(req: NextRequest) {
       session.id,
       session.metadata
     );
-    // Return 400 so Stripe retries. If metadata is genuinely absent, retries
-    // will keep failing — surface this in the Stripe dashboard immediately.
     return NextResponse.json(
       { error: "Missing required metadata: student_id, product_id, or sessions_included" },
       { status: 400 }
@@ -62,38 +49,33 @@ export async function POST(req: NextRequest) {
   }
 
   const delta = parseInt(sessions_included, 10);
-
   if (isNaN(delta) || delta <= 0) {
-    console.error(
-      "[stripe/webhook] Invalid sessions_included value:",
-      sessions_included
-    );
+    console.error("[stripe/webhook] Invalid sessions_included value:", sessions_included);
     return NextResponse.json(
       { error: "sessions_included must be a positive integer" },
       { status: 400 }
     );
   }
 
-  // --- Service-role Supabase client ---
-  // Webhook handlers have no user auth context; service role bypasses RLS.
+  // Use payment_intent as idempotency key (maps to stripe_payment_intent_id column)
+  const paymentIntentId = typeof session.payment_intent === "string"
+    ? session.payment_intent
+    : session.payment_intent?.id ?? session.id;
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // --- Idempotency check ---
-  // Use the Stripe event ID as source_id. One ledger entry per event ID.
-  // Strongly recommended: add a UNIQUE constraint on credit_ledger(source_id)
-  // at the DB level to enforce this even under concurrent delivery.
+  // Idempotency check via stripe_payment_intent_id
   const { data: existing, error: lookupError } = await supabase
     .from("credit_ledger")
     .select("id")
-    .eq("source_id", event.id)
+    .eq("stripe_payment_intent_id", paymentIntentId)
     .maybeSingle();
 
   if (lookupError) {
     console.error("[stripe/webhook] Idempotency lookup failed:", lookupError);
-    // Return 500 so Stripe retries after a delay.
     return NextResponse.json(
       { error: "Database error during idempotency check" },
       { status: 500 }
@@ -101,17 +83,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (existing) {
-    // Already credited — acknowledge cleanly without a second insert.
-    console.log(
-      "[stripe/webhook] Event already processed, skipping:",
-      event.id
-    );
+    console.log("[stripe/webhook] Event already processed, skipping:", paymentIntentId);
     return NextResponse.json({ received: true });
   }
 
-  // --- Write ledger entry ---
-  // The ledger is append-only. Every purchase is its own positive delta row.
-  // Running balances are always derived by summing delta for a given student_id.
   const { error: insertError } = await supabase
     .from("credit_ledger")
     .insert({
@@ -119,13 +94,11 @@ export async function POST(req: NextRequest) {
       product_id,
       delta,
       entry_type: "purchase",
-      source_id: event.id, // Stripe event ID — globally unique, safe idempotency key
-      created_at: new Date().toISOString(),
+      stripe_payment_intent_id: paymentIntentId,
     });
 
   if (insertError) {
     console.error("[stripe/webhook] Failed to insert ledger entry:", insertError);
-    // Return 500 so Stripe retries. The idempotency check above prevents double-crediting on retry.
     return NextResponse.json(
       { error: "Failed to record lesson credits" },
       { status: 500 }
@@ -134,7 +107,7 @@ export async function POST(req: NextRequest) {
 
   console.log(
     `[stripe/webhook] Credited ${delta} session(s) to student ${student_id} ` +
-      `for product ${product_id} (event ${event.id})`
+    `for product ${product_id} (payment_intent ${paymentIntentId})`
   );
 
   return NextResponse.json({ received: true });
