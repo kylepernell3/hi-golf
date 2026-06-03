@@ -26,6 +26,7 @@ export async function submitOnboarding(
 ): Promise<OnboardingFormState> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
+
   if (authError || !user) {
     return { error: 'Not authenticated' }
   }
@@ -42,6 +43,7 @@ export async function submitOnboarding(
   }
 
   const parsed = OnboardingSchema.safeParse(raw)
+
   if (!parsed.success) {
     return {
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
@@ -49,6 +51,7 @@ export async function submitOnboarding(
   }
 
   const { full_name, ...profileData } = parsed.data
+
   // Update auth user display name
   await supabase.auth.updateUser({ data: { full_name } })
 
@@ -58,6 +61,7 @@ export async function submitOnboarding(
     .upsert(
       {
         user_id: user.id,
+        full_name, // Map full_name into profile for data consistency
         ...profileData,
         onboarding_complete: true,
       },
@@ -77,6 +81,7 @@ export async function getStudentProfile() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+
   const { data, error } = await supabase
     .from('student_profiles')
     .select('*')
@@ -86,5 +91,6 @@ export async function getStudentProfile() {
   if (error) {
     console.error('[getStudentProfile]', error)
   }
+
   return data ?? null
 }
