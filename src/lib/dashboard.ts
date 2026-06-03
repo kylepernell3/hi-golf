@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/types/database'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -40,7 +40,6 @@ export async function getDashboardData(): Promise<DashboardData | null> {
   } = await supabase.auth.getUser()
 
   if (!user) return null
-
   const userId = user.id
   const now = new Date().toISOString()
 
@@ -100,7 +99,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
 
   // Compute credit balance from ledger
   const creditBalance = (ledgerResult.data ?? []).reduce(
-    (sum: number, row) => sum + row.amount,
+    (sum: number, row: { amount: number }) => sum + row.amount,
     0
   )
 
@@ -125,7 +124,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       credits_debited: 1
     })),
     recentSwings: (swingsResult.data ?? []) as SwingUpload[],
-    onboardingComplete: profile?.onboarding_complete ?? false,
+    onboardingComplete: !!profile?.onboarding_complete,
   }
 }
 
@@ -145,7 +144,7 @@ export async function getCreditBalance(userId: string): Promise<number> {
   }
 
   return (data ?? []).reduce(
-    (sum: number, row) => sum + row.amount,
+    (sum: number, row: { amount: number }) => sum + row.amount,
     0
   )
 }
