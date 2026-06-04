@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 const OnboardingSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
@@ -36,44 +35,7 @@ export interface StudentProfileRow {
   onboarding_complete: boolean
 }
 
-/**
- * Minimal Supabase Database schema covering only the tables used in this
- * module. Typed with StudentProfileRow so queries are fully type-checked
- * without requiring the full generated Database type.
- */
-type StudentProfilesDb = {
-  public: {
-    Tables: {
-      student_profiles: {
-        Row: StudentProfileRow
-        Insert: StudentProfileRow
-        Update: Partial<StudentProfileRow>
-      }
-    }
-    Views: Record<string, never>
-    Functions: Record<string, never>
-    Enums: Record<string, never>
-    CompositeTypes: Record<string, never>
-  }
-}
-
-/**
- * Returns a typed query builder for the student_profiles table.
- * Uses `as unknown as` — the approved TypeScript double-assertion pattern —
- * to attach our inline schema without introducing `any`.
- */
-function profilesTable<D>(client: SupabaseClient<D>) {
-  return (client as unknown as SupabaseClient<StudentProfilesDb>).from(
-    'student_profiles'
-  )
-}
-
-/**
- * Safe FormData string extractor.
- * `formData.get()` returns `FormDataEntryValue | null` (string | File | null).
- * This helper narrows to `string | undefined` so callers never receive a File
- * or null and never need an unsafe cast.
- */
+/** Safe FormData string extractor — narrows FormDataEntryValue | null to string | undefined. */
 function getStr(fd: FormData, key: string): string | undefined {
   const val = fd.get(key)
   return typeof val === 'string' ? val : undefined
@@ -138,10 +100,9 @@ export async function submitOnboarding(
     onboarding_complete: true,
   }
 
-  const { error: profileError } = await profilesTable(supabase).upsert(
-    profilePayload,
-    { onConflict: 'user_id' }
-  )
+  const { error: profileError } = await supabase
+    .from('student_profiles')
+    .upsert(profilePayload, { onConflict: 'user_id' })
 
   if (profileError) {
     console.error('[onboarding] profile upsert error:', profileError)
@@ -158,7 +119,8 @@ export async function getStudentProfile(): Promise<StudentProfileRow | null> {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data, error } = await profilesTable(supabase)
+  const { data, error } = await supabase
+    .from('student_profiles')
     .select('*')
     .eq('user_id', user.id)
     .maybeSingle()
@@ -166,5 +128,5 @@ export async function getStudentProfile(): Promise<StudentProfileRow | null> {
   if (error) {
     console.error('[getStudentProfile]', error)
   }
-  return data ?? null
+  return (data as StudentProfileRow | null) ?? null
 }
