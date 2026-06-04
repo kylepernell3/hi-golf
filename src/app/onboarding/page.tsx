@@ -205,7 +205,7 @@ function Step2({
         >
           Your Game
         </h2>
-        <p className="text-zinc-500 text-sm">Help us understand your background.</p>
+        <p className="text-zinc-500 text-sm">Tell us about your golf background.</p>
       </div>
 
       <div>
@@ -262,7 +262,7 @@ function Step3({
         >
           Goals &amp; Details
         </h2>
-        <p className="text-zinc-500 text-sm">This is what your coach will read first.</p>
+        <p className="text-zinc-500 text-sm">This shapes your training profile and platform experience.</p>
       </div>
 
       <div>
@@ -307,13 +307,13 @@ function Step3({
       </div>
 
       <div>
-        <FieldLabel htmlFor="notes">Anything else your coach should know? <span className="text-zinc-600 font-normal">(optional)</span></FieldLabel>
+        <FieldLabel htmlFor="notes">Anything else to add to your profile? <span className="text-zinc-600 font-normal">(optional)</span></FieldLabel>
         <textarea
           id="notes"
           rows={3}
           value={values.notes}
           onChange={(e) => onChange('notes', e.target.value)}
-          placeholder="Injuries, schedule constraints, equipment info…"
+          placeholder="Injuries, schedule preferences, equipment info…"
           className={textareaCls}
         />
       </div>
@@ -372,9 +372,9 @@ export default function OnboardingPage() {
             You're all set!
           </h2>
           <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-            Your profile is complete. Your coach has been notified and will be in touch soon.
+            Your Hi Golf profile is ready. Head to your dashboard to get started.
           </p>
-          <a
+          
             href="/dashboard"
             className="inline-block px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 text-sm font-semibold transition-opacity hover:opacity-90"
             style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12)' }}
@@ -405,7 +405,7 @@ export default function OnboardingPage() {
           >
             Hi<span className="text-amber-500"> Golf</span>
           </p>
-          <p className="text-zinc-500 text-xs mt-1">Player setup</p>
+          <p className="text-zinc-500 text-xs mt-1">Profile setup</p>
         </div>
 
         {/* Card */}
