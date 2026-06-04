@@ -375,7 +375,7 @@ export default function OnboardingPage() {
             Your Hi Golf profile is ready. Head to your dashboard to get started.
           </p>
           
-            href="/dashboard"
+            <a href="/dashboard"
             className="inline-block px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 text-sm font-semibold transition-opacity hover:opacity-90"
             style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12)' }}
           >
