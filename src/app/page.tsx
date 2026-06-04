@@ -67,7 +67,7 @@ export default async function HomePage() {
 
         {/* Eyebrow */}
         <p className="text-zinc-500 text-[10px] uppercase tracking-widest mb-5 select-none">
-          Private Golf Instruction
+          Golf Operations Platform
         </p>
 
         {/* Headline */}
@@ -75,14 +75,14 @@ export default async function HomePage() {
           className="font-serif text-5xl md:text-7xl text-white leading-[1.05] tracking-tight max-w-3xl"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Elevate Your Game
+          Run Your Golf Business
           <br />
-          <span className="text-amber-400">with a Pro</span>
+          <span className="text-amber-400">From One Platform</span>
         </h1>
 
         {/* Subheadline */}
         <p className="mt-6 text-zinc-400 text-lg max-w-md leading-relaxed">
-          Personalized lessons, swing analysis, and credit-based booking&nbsp;— all in one place.
+          Bookings, client management, session tracking, and rewards&nbsp;— purpose-built for golf coaches and academies.
         </p>
 
         {/* CTAs */}
@@ -92,13 +92,13 @@ export default async function HomePage() {
             className="rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm px-8 py-3 transition-colors duration-150"
             style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.14)' }}
           >
-            ⛳ Book a Session
+            ⛳ Open the Platform
           </Link>
           <a
             href="#features"
             className="rounded-xl border border-zinc-700 text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 text-sm font-medium px-8 py-3 transition-colors duration-150"
           >
-            Learn More
+            See Features
           </a>
         </div>
 
@@ -121,7 +121,7 @@ export default async function HomePage() {
               className="font-serif text-3xl md:text-4xl text-white tracking-tight"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
-              Everything you need to improve
+              Everything needed to operate and grow
             </h2>
             <div aria-hidden className="mt-5 mx-auto w-12 h-px bg-gradient-to-r from-amber-600/0 via-amber-500/60 to-amber-600/0" />
           </div>
@@ -129,43 +129,43 @@ export default async function HomePage() {
           {/* Cards grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-            {/* Card 1 — Personalized Lessons */}
+            {/* Card 1 — Bookings & Scheduling */}
             <div className="group rounded-2xl border border-zinc-800/70 bg-zinc-900/60 p-6 flex flex-col gap-5 hover:border-amber-500/25 hover:bg-zinc-900/80 transition-all duration-200">
               <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                 <GolfFlagIcon className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-base mb-2">Personalized Lessons</h3>
+                <h3 className="text-white font-semibold text-base mb-2">Bookings & Scheduling</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
-                  Tailored instruction from a certified PGA professional focused on your specific game.
+                  Manage session types, availability, and bookings in one place — for a solo coach or an entire academy roster.
                 </p>
               </div>
               <div aria-hidden className="mt-auto h-px w-full bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
 
-            {/* Card 2 — Swing Analysis */}
+            {/* Card 2 — Client & Session Management */}
             <div className="group rounded-2xl border border-zinc-800/70 bg-zinc-900/60 p-6 flex flex-col gap-5 hover:border-emerald-500/25 hover:bg-zinc-900/80 transition-all duration-200">
               <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                 <PlayIcon />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-base mb-2">Swing Analysis</h3>
+                <h3 className="text-white font-semibold text-base mb-2">Client & Session Management</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
-                  Review instructor-uploaded swing recordings and notes after every session.
+                  Student profiles, onboarding data, session notes, and progress history — all structured and accessible.
                 </p>
               </div>
               <div aria-hidden className="mt-auto h-px w-full bg-gradient-to-r from-emerald-500/20 via-emerald-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
 
-            {/* Card 3 — Credit System */}
+            {/* Card 3 — Rewards & Value Tracking */}
             <div className="group rounded-2xl border border-zinc-800/70 bg-zinc-900/60 p-6 flex flex-col gap-5 hover:border-amber-500/25 hover:bg-zinc-900/80 transition-all duration-200">
               <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                 <CreditIcon />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-base mb-2">Credit System</h3>
+                <h3 className="text-white font-semibold text-base mb-2">Rewards & Value Tracking</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">
-                  Purchase credits and book sessions at your convenience. No subscription required.
+                  Flexible reward structures and value tracking that keep students engaged and your business model easy to run.
                 </p>
               </div>
               <div aria-hidden className="mt-auto h-px w-full bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -181,10 +181,10 @@ export default async function HomePage() {
       <div className="relative px-6 py-4">
         <div className="max-w-5xl mx-auto border-y border-zinc-800/50 py-6 flex flex-wrap items-center justify-center gap-8 md:gap-16">
           {[
-            { value: '1-on-1', label: 'Private sessions' },
-            { value: 'PGA', label: 'Certified instructor' },
-            { value: 'HD', label: 'Swing recordings' },
-            { value: 'Flex', label: 'Credit booking' },
+            { value: 'All-in-1', label: 'Unified platform' },
+            { value: 'WL', label: 'White-label ready' },
+            { value: 'HD', label: 'Session recordings' },
+            { value: 'Flex', label: 'Reward structures' },
           ].map((stat) => (
             <div key={stat.value} className="flex flex-col items-center gap-0.5 select-none">
               <span
@@ -208,24 +208,24 @@ export default async function HomePage() {
             {/* Inner glow */}
             <div aria-hidden className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full bg-amber-500/[0.06] blur-2xl" />
             <div className="relative">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-zinc-600 mb-4 select-none">Invitation only</p>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-zinc-600 mb-4 select-none">Get access</p>
               <h2
                 className="font-serif text-2xl md:text-3xl text-white tracking-tight mb-3"
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
-                Ready to start?
+                Ready to get started?
               </h2>
               <p className="text-zinc-400 text-base mb-8">
-                Join today and book your first lesson.
+                Sign in and start running your golf business from one platform.
               </p>
               <Link
                 href="/login"
                 className="inline-block rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm px-10 py-3.5 transition-colors duration-150"
                 style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.14)' }}
               >
-                Get Started →
+                Enter Platform →
               </Link>
-              <p className="mt-5 text-zinc-700 text-[11px]">Access is by invitation only. Contact your instructor to get set up.</p>
+              <p className="mt-5 text-zinc-700 text-[11px]">Access is by invitation. Contact your account manager to get set up.</p>
             </div>
           </div>
         </div>
@@ -252,7 +252,7 @@ export default async function HomePage() {
             href="/login"
             className="text-zinc-700 hover:text-zinc-500 text-xs transition-colors duration-150"
           >
-            Student portal →
+            Platform login →
           </Link>
         </div>
       </footer>
