@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import type { Handedness, SkillLevel } from '@/types/database'
 
 const OnboardingSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
@@ -26,8 +27,8 @@ export interface StudentProfileRow {
   user_id: string
   full_name: string
   phone: string | null
-  handedness: 'right' | 'left' | 'unknown'
-  skill_level: 'beginner' | 'intermediate' | 'advanced' | 'scratch'
+  handedness: Handedness
+  skill_level: SkillLevel
   goals: string | null
   handicap: number | null
   scoring_range: string | null
@@ -46,28 +47,30 @@ export async function submitOnboarding(
   formData: FormData
 ): Promise<OnboardingFormState> {
   const supabase = await createClient()
+
   const {
     data: { user },
-    error: authError,
   } = await supabase.auth.getUser()
 
-  if (authError || !user) {
+  if (!user) {
     return { error: 'Not authenticated' }
   }
 
-  const handicapRaw = getStr(formData, 'handicap')
   const raw = {
-    full_name: getStr(formData, 'full_name') ?? '',
+    full_name: getStr(formData, 'full_name'),
     phone: getStr(formData, 'phone'),
-    handedness: getStr(formData, 'handedness') ?? 'unknown',
-    skill_level: getStr(formData, 'skill_level') ?? 'beginner',
+    handedness: getStr(formData, 'handedness'),
+    skill_level: getStr(formData, 'skill_level'),
     goals: getStr(formData, 'goals'),
-    handicap: handicapRaw ? Number(handicapRaw) : null,
+    handicap: formData.get('handicap')
+      ? Number(formData.get('handicap'))
+      : undefined,
     scoring_range: getStr(formData, 'scoring_range'),
     notes: getStr(formData, 'notes'),
   }
 
   const parsed = OnboardingSchema.safeParse(raw)
+
   if (!parsed.success) {
     return {
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
@@ -85,8 +88,6 @@ export async function submitOnboarding(
     notes,
   } = parsed.data
 
-  await supabase.auth.updateUser({ data: { full_name } })
-
   const { error: profileError } = await supabase
     .from('student_profiles')
     .upsert(
@@ -94,8 +95,8 @@ export async function submitOnboarding(
         user_id: user.id,
         full_name,
         phone: phone ?? null,
-        handedness,
-        skill_level,
+        handedness: handedness as Handedness,
+        skill_level: skill_level as SkillLevel,
         goals: goals ?? null,
         handicap: handicap ?? null,
         scoring_range: scoring_range ?? null,
@@ -128,6 +129,8 @@ export async function getStudentProfile(): Promise<StudentProfileRow | null> {
 
   if (error) {
     console.error('[getStudentProfile]', error)
+    return null
   }
-  return (data as StudentProfileRow | null) ?? null
+
+  return data as StudentProfileRow | null
 }
