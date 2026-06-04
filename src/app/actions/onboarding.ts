@@ -35,7 +35,7 @@ export interface StudentProfileRow {
   onboarding_complete: boolean
 }
 
-/** Safe FormData string extractor — narrows FormDataEntryValue | null to string | undefined. */
+/** Safe FormData string extractor. */
 function getStr(fd: FormData, key: string): string | undefined {
   const val = fd.get(key)
   return typeof val === 'string' ? val : undefined
@@ -87,22 +87,23 @@ export async function submitOnboarding(
 
   await supabase.auth.updateUser({ data: { full_name } })
 
-  const profilePayload: StudentProfileRow = {
-    user_id: user.id,
-    full_name,
-    phone: phone || null,
-    handedness,
-    skill_level,
-    goals: goals || null,
-    handicap: handicap ?? null,
-    scoring_range: scoring_range || null,
-    notes: notes || null,
-    onboarding_complete: true,
-  }
-
   const { error: profileError } = await supabase
     .from('student_profiles')
-    .upsert(profilePayload, { onConflict: 'user_id' })
+    .upsert(
+      {
+        user_id: user.id,
+        full_name,
+        phone: phone ?? null,
+        handedness,
+        skill_level,
+        goals: goals ?? null,
+        handicap: handicap ?? null,
+        scoring_range: scoring_range ?? null,
+        notes: notes ?? null,
+        onboarding_complete: true,
+      },
+      { onConflict: 'user_id' }
+    )
 
   if (profileError) {
     console.error('[onboarding] profile upsert error:', profileError)
