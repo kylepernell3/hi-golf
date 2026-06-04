@@ -84,7 +84,7 @@ function LoginForm() {
             Hi<span className="text-amber-500"> Golf</span>
           </h1>
           <p className="text-zinc-500 text-sm mt-2.5 leading-relaxed">
-            Private instruction.<br className="hidden sm:block" /> Exceptional results.
+            Your golf operations platform.
           </p>
         </div>
 
