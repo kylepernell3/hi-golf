@@ -62,7 +62,7 @@ type StudentProfilesDb = {
  * Uses `as unknown as` — the approved TypeScript double-assertion pattern —
  * to attach our inline schema without introducing `any`.
  */
-function profilesTable(client: SupabaseClient) {
+function profilesTable<D>(client: SupabaseClient<D>) {
   return (client as unknown as SupabaseClient<StudentProfilesDb>).from(
     'student_profiles'
   )
