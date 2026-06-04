@@ -70,7 +70,6 @@ export async function submitOnboarding(
   }
 
   const parsed = OnboardingSchema.safeParse(raw)
-
   if (!parsed.success) {
     return {
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
@@ -88,23 +87,23 @@ export async function submitOnboarding(
     notes,
   } = parsed.data
 
+  const payload = {
+    user_id: user.id,
+    full_name,
+    phone: phone ?? null,
+    handedness: handedness as Handedness,
+    skill_level: skill_level as SkillLevel,
+    goals: goals ?? null,
+    handicap: handicap ?? null,
+    scoring_range: scoring_range ?? null,
+    notes: notes ?? null,
+    onboarding_complete: true,
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: profileError } = await supabase
     .from('student_profiles')
-    .upsert(
-      {
-        user_id: user.id,
-        full_name,
-        phone: phone ?? null,
-        handedness: handedness as Handedness,
-        skill_level: skill_level as SkillLevel,
-        goals: goals ?? null,
-        handicap: handicap ?? null,
-        scoring_range: scoring_range ?? null,
-        notes: notes ?? null,
-        onboarding_complete: true,
-      },
-      { onConflict: 'user_id' }
-    )
+    .upsert(payload as any, { onConflict: 'user_id' })
 
   if (profileError) {
     console.error('[onboarding] profile upsert error:', profileError)
