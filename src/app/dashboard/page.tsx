@@ -72,6 +72,10 @@ function EmptyState({ message, sub, cta, href }: { message: string; sub?: string
 
 export default async function DashboardPage() {
   const data = await getDashboardData()
+
+  if (!data) {
+    redirect('/login')
+  }
   const { creditBalance, upcomingBookings, recentSessions, recentSwings, onboardingComplete } = data
 
   // Credit bar: scale to 10 as a soft max; always show at least a sliver if balance > 0
