@@ -5,7 +5,7 @@ import { useFormState, useFormStatus } from 'react-dom'
 import { submitOnboarding } from '@/app/actions/onboarding'
 
 // ── Types ────────────────────────────────────────────────────────────
-type FormState = { error?: string | null; success?: boolean }
+type FormState = { error?: string; fieldErrors?: Record<string, string[]>; success?: boolean }
 type FormValues = {
   full_name: string
   phone: string
@@ -17,7 +17,7 @@ type FormValues = {
   notes: string
 }
 
-const INITIAL_STATE: FormState = { error: null, success: false }
+const INITIAL_STATE: FormState = { error: undefined, success: false }
 
 const INITIAL_VALUES: FormValues = {
   full_name:     '',
