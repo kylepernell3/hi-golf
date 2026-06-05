@@ -156,7 +156,7 @@ function Step1({
         >
           Personal Info
         </h2>
-        <p className="text-zinc-500 text-sm">Let's start with the basics.</p>
+        <p className="text-zinc-500 text-sm">Start building your Hi Golf profile.</p>
       </div>
 
       <div>
@@ -205,7 +205,7 @@ function Step2({
         >
           Your Game
         </h2>
-        <p className="text-zinc-500 text-sm">Tell us about your golf background.</p>
+        <p className="text-zinc-500 text-sm">Tell us about your game and experience level.</p>
       </div>
 
       <div>
@@ -260,9 +260,9 @@ function Step3({
           className="text-2xl font-bold text-white mb-1"
           style={{ fontFamily: 'var(--font-playfair)' }}
         >
-          Goals &amp; Details
+          Goals &amp; Preferences
         </h2>
-        <p className="text-zinc-500 text-sm">This shapes your training profile and platform experience.</p>
+        <p className="text-zinc-500 text-sm">Personalize your training profile and platform experience.</p>
       </div>
 
       <div>
@@ -323,8 +323,8 @@ function Step3({
 
 // ── Main Page ────────────────────────────────────────────────────────
 export default function OnboardingPage() {
-  const [step, setStep]       = useState(1)
-  const [values, setValues]   = useState<FormValues>(INITIAL_VALUES)
+  const [step, setStep]           = useState(1)
+  const [values, setValues]       = useState<FormValues>(INITIAL_VALUES)
   const [stepError, setStepError] = useState<string | null>(null)
 
   const [state, formAction] = useFormState<FormState, FormData>(
@@ -362,7 +362,7 @@ export default function OnboardingPage() {
         <div className="relative z-10 text-center max-w-sm">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-6">
             <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8 text-emerald-400" aria-hidden>
-              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
           <h2
@@ -372,10 +372,10 @@ export default function OnboardingPage() {
             You're all set!
           </h2>
           <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-            Your Hi Golf profile is ready. Head to your dashboard to get started.
+            Your golf profile is live. Head to your dashboard to track progress, manage bookings, and explore your platform tools.
           </p>
           
-            <a href="/dashboard"
+            href="/dashboard"
             className="inline-block px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 text-sm font-semibold transition-opacity hover:opacity-90"
             style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12)' }}
           >
@@ -405,7 +405,7 @@ export default function OnboardingPage() {
           >
             Hi<span className="text-amber-500"> Golf</span>
           </p>
-          <p className="text-zinc-500 text-xs mt-1">Profile setup</p>
+          <p className="text-zinc-500 text-xs mt-1">Set up your golf profile</p>
         </div>
 
         {/* Card */}
@@ -453,10 +453,10 @@ export default function OnboardingPage() {
           {step === 3 && (
             <form action={formAction}>
               {/* Hidden inputs carry steps 1 & 2 data */}
-              <input type="hidden" name="full_name"   value={values.full_name} />
-              <input type="hidden" name="phone"        value={values.phone} />
-              <input type="hidden" name="handedness"   value={values.handedness} />
-              <input type="hidden" name="skill_level"  value={values.skill_level} />
+              <input type="hidden" name="full_name"  value={values.full_name} />
+              <input type="hidden" name="phone"       value={values.phone} />
+              <input type="hidden" name="handedness"  value={values.handedness} />
+              <input type="hidden" name="skill_level" value={values.skill_level} />
 
               <Step3 values={values} onChange={handleChange} />
 
