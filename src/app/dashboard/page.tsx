@@ -78,9 +78,9 @@ export default async function DashboardPage() {
   }
   const { creditBalance, upcomingBookings, recentSessions, recentSwings, onboardingComplete } = data
 
-  // Credit bar: scale to 10 as a soft max; always show at least a sliver if balance > 0
+  // Balance bar: scale to 10 as a soft max; always show at least a sliver if balance > 0
   const creditMax = Math.max(10, creditBalance)
-  const creditPct  = creditBalance === 0 ? 0 : Math.max(4, (creditBalance / creditMax) * 100)
+  const creditPct = creditBalance === 0 ? 0 : Math.max(4, (creditBalance / creditMax) * 100)
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
             >
               Hi<span className="text-amber-500"> Golf</span>
             </h1>
-            <p className="text-zinc-500 text-sm mt-1.5">Your private coaching portal</p>
+            <p className="text-zinc-500 text-sm mt-1.5">Your golf dashboard</p>
           </div>
           <form action={signOut}>
             <button
@@ -117,9 +117,9 @@ export default async function DashboardPage() {
         {!onboardingComplete && (
           <div className="mb-8 rounded-2xl bg-amber-500/8 border border-amber-500/25 px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-amber-400 font-semibold text-sm">Complete your player profile</p>
+              <p className="text-amber-400 font-semibold text-sm">Complete your Hi Golf profile</p>
               <p className="text-zinc-400 text-xs mt-0.5 leading-relaxed">
-                Help your coach tailor sessions to your game — takes under 3 minutes.
+                Set up your golf profile and personalize your experience — takes under 3 minutes.
               </p>
             </div>
             <Link
@@ -132,19 +132,19 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* ── Top row: Credits + Upcoming ─────────────────────────── */}
+        {/* ── Top row: Rewards Balance + Upcoming ─────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
-          {/* Credit Balance */}
+          {/* Rewards Balance */}
           <div className="bg-zinc-900/60 border border-zinc-800/70 rounded-2xl p-6 flex flex-col">
             <SectionHeader
-              title="Credit Balance"
+              title="Rewards Balance"
               action={
                 <Link
                   href="/credits/buy"
                   className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 transition-colors"
                 >
-                  Buy more →
+                  Add balance →
                 </Link>
               }
             />
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
                   {creditBalance}
                 </span>
                 <span className="text-zinc-500 text-sm mb-1.5">
-                  credit{creditBalance !== 1 ? 's' : ''}
+                  reward credit{creditBalance !== 1 ? 's' : ''}
                 </span>
               </div>
 
@@ -171,8 +171,8 @@ export default async function DashboardPage() {
               </div>
               <p className="text-zinc-600 text-xs mt-2">
                 {creditBalance === 0
-                  ? 'No credits — purchase to book sessions'
-                  : `${creditBalance} session credit${creditBalance !== 1 ? 's' : ''} remaining`}
+                  ? 'No balance yet — add credits to start booking'
+                  : `${creditBalance} reward credit${creditBalance !== 1 ? 's' : ''} available`}
               </p>
             </div>
           </div>
@@ -194,8 +194,8 @@ export default async function DashboardPage() {
             {upcomingBookings.length === 0 ? (
               <EmptyState
                 message="No upcoming sessions"
-                sub="Schedule time with your coach to keep improving"
-                cta="Book your first session"
+                sub="Book a session to keep your progress going"
+                cta="Book a session"
                 href="/bookings/new"
               />
             ) : (
@@ -221,17 +221,17 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Bottom row: Recent Sessions + Swing Uploads ─────────── */}
+        {/* ── Bottom row: Activity History + Video Uploads ─────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Recent Sessions */}
+          {/* Activity History */}
           <div className="lg:col-span-2 bg-zinc-900/60 border border-zinc-800/70 rounded-2xl p-6">
-            <SectionHeader title="Session History" />
+            <SectionHeader title="Activity History" />
 
             {recentSessions.length === 0 ? (
               <EmptyState
-                message="No completed sessions yet"
-                sub="Your session history will appear here after your first lesson"
+                message="No activity yet"
+                sub="Your session history will appear here after your first booking"
               />
             ) : (
               <ul className="divide-y divide-zinc-800/50">
@@ -262,10 +262,10 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* Swing Uploads */}
+          {/* Video Uploads */}
           <div className="bg-zinc-900/60 border border-zinc-800/70 rounded-2xl p-6">
             <SectionHeader
-              title="Swing Uploads"
+              title="Video Uploads"
               action={
                 <Link
                   href="/swings/upload"
@@ -279,19 +279,19 @@ export default async function DashboardPage() {
             {recentSwings.length === 0 ? (
               <EmptyState
                 message="No uploads yet"
-                sub="Upload a swing video for coach review"
+                sub="Upload a swing video for analysis and feedback"
               />
             ) : (
               <ul className="divide-y divide-zinc-800/50">
                 {recentSwings.map((swing) => (
                   <li key={swing.id} className="py-4 first:pt-0 last:pb-0">
-                    <a
+                    
                       href={swing.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-sm font-medium transition-colors"
                     >
-                      View swing ↗
+                      View video ↗
                     </a>
                     <p className="text-zinc-500 text-xs mt-0.5">
                       {formatShortDate(swing.created_at)}
