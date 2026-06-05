@@ -456,7 +456,11 @@ export default function OnboardingPage() {
               <input type="hidden" name="full_name"  value={values.full_name} />
               <input type="hidden" name="phone"       value={values.phone} />
               <input type="hidden" name="handedness"  value={values.handedness} />
-              <input type="hidden" name="skill_level" value={values.skill_level} />
+              <input type="hidden" name="skill_level" value={values.skill_level} />                 <input type="hidden" name="goals" value={values.goals} />                 <input type="hidden" name="handicap" value={values.handicap} />                 <input type="hidden" name="scoring_range" value={values.scoring_range} />                 <input type="hidden" name="notes" value={values.notes} />
+                              <input type="hidden" name="goals" value={values.goals} />
+                              <input type="hidden" name="handicap" value={values.handicap} />
+                              <input type="hidden" name="scoring_range" value={values.scoring_range} />
+                              <input type="hidden" name="notes" value={values.notes} />
 
               <Step3 values={values} onChange={handleChange} />
 
