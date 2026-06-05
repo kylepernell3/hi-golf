@@ -10,14 +10,16 @@ export default async function HomePage() {
   return (
     <div className="relative min-h-screen bg-zinc-950 overflow-x-hidden">
 
-      {/* — Ambient glows — */}
-      <div aria-hidden className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-amber-500/6 blur-3xl" />
+      {/* ── Ambient glows ── */}
+      <div aria-hidden className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-amber-500/[0.06] blur-3xl" />
       <div aria-hidden className="pointer-events-none fixed bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-emerald-500/[0.04] blur-3xl" />
 
-      {/* — Top gradient rule — */}
+      {/* ── Top gradient rule ── */}
       <div aria-hidden className="pointer-events-none fixed top-0 left-0 right-0 z-50 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.3) 40%, rgba(245,158,11,0.3) 60%, transparent)' }} />
 
-      {/* ── Nav ── */}
+      {/* ════════════════════════════════════════
+          NAV
+      ════════════════════════════════════════ */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-5 max-w-5xl mx-auto">
         <span className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
           Hi<span className="text-amber-500"> Golf</span>
@@ -36,9 +38,11 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      {/* ── Hero ── */}
+      {/* ════════════════════════════════════════
+          HERO
+      ════════════════════════════════════════ */}
       <section className="relative z-10 text-center px-6 pt-20 pb-24 max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/8 text-amber-400 text-xs font-medium mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/[0.08] text-amber-400 text-xs font-medium mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
           Earn rewards every round
         </div>
@@ -72,14 +76,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Stats strip ── */}
+      {/* ════════════════════════════════════════
+          STATS STRIP
+      ════════════════════════════════════════ */}
       <section className="relative z-10 border-y border-zinc-800/60 bg-zinc-900/30 py-5">
         <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {[
-            { stat: '100%', label: 'Free to join' },
+            { stat: '100%',        label: 'Free to join' },
             { stat: 'Every round', label: 'Earns points' },
             { stat: 'Real rewards', label: 'You can redeem' },
-            { stat: 'Your pace', label: 'Track & improve' },
+            { stat: 'Your pace',   label: 'Track & improve' },
           ].map(({ stat, label }) => (
             <div key={label}>
               <p className="text-white font-bold text-lg">{stat}</p>
@@ -89,7 +95,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── How it works ── */}
+      {/* ════════════════════════════════════════
+          HOW IT WORKS
+      ════════════════════════════════════════ */}
       <section id="how-it-works" className="relative z-10 py-24 px-6 max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h2
@@ -133,7 +141,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ════════════════════════════════════════
+          FEATURES
+      ════════════════════════════════════════ */}
       <section className="relative z-10 py-16 px-6 max-w-4xl mx-auto">
         <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-3xl p-8 sm:p-12 grid sm:grid-cols-2 gap-10 items-center">
           <div>
@@ -162,11 +172,12 @@ export default async function HomePage() {
               ))}
             </ul>
           </div>
+
           <div className="flex flex-col gap-4">
             {[
-              { label: 'Rounds Logged', value: '47', sub: 'this season' },
-              { label: 'Reward Points', value: '1,240', sub: 'ready to redeem' },
-              { label: 'Handicap Trend', value: '↓ 2.1', sub: 'last 90 days' },
+              { label: 'Rounds Logged',   value: '47',    sub: 'this season' },
+              { label: 'Reward Points',   value: '1,240', sub: 'ready to redeem' },
+              { label: 'Handicap Trend',  value: '↓ 2.1', sub: 'last 90 days' },
             ].map(({ label, value, sub }) => (
               <div key={label} className="bg-zinc-950/60 border border-zinc-800/50 rounded-xl px-5 py-4">
                 <p className="text-zinc-500 text-xs mb-1">{label}</p>
@@ -178,7 +189,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Bottom CTA ── */}
+      {/* ════════════════════════════════════════
+          BOTTOM CTA
+      ════════════════════════════════════════ */}
       <section className="relative z-10 py-24 px-6 text-center max-w-2xl mx-auto">
         <h2
           className="text-4xl font-bold text-white mb-4"
@@ -199,7 +212,9 @@ export default async function HomePage() {
         <p className="text-zinc-700 text-xs mt-4">No credit card required. Free forever.</p>
       </section>
 
-      {/* ── Footer ── */}
+      {/* ════════════════════════════════════════
+          FOOTER
+      ════════════════════════════════════════ */}
       <footer className="relative z-10 border-t border-zinc-800/50 py-8 px-6">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="text-zinc-600 text-sm font-medium" style={{ fontFamily: 'var(--font-playfair)' }}>
