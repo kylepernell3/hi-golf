@@ -52,11 +52,24 @@ function SectionHeader({ title, action }: { title: string; action?: React.ReactN
   )
 }
 
-function EmptyState({ message, sub, cta, href }: { message: string; sub?: string; cta?: string; href?: string }) {
+function EmptyState({
+  icon,
+  message,
+  sub,
+  cta,
+  href,
+}: {
+  icon?: string
+  message: string
+  sub?: string
+  cta?: string
+  href?: string
+}) {
   return (
-    <div className="text-center py-10">
+    <div className="text-center py-8">
+      {icon && <p className="text-3xl mb-3">{icon}</p>}
       <p className="text-zinc-400 text-sm font-medium">{message}</p>
-      {sub && <p className="text-zinc-600 text-xs mt-1">{sub}</p>}
+      {sub && <p className="text-zinc-600 text-xs mt-1.5 leading-relaxed max-w-[230px] mx-auto">{sub}</p>}
       {cta && href && (
         <Link
           href={href}
@@ -76,14 +89,15 @@ export default async function DashboardPage() {
   if (!data) {
     redirect('/login')
   }
+
   const { creditBalance, upcomingBookings, recentSessions, recentSwings, onboardingComplete } = data
 
-  // Balance bar: scale to 10 as a soft max; always show at least a sliver if balance > 0
   const creditMax = Math.max(10, creditBalance)
   const creditPct = creditBalance === 0 ? 0 : Math.max(4, (creditBalance / creditMax) * 100)
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
+
       {/* Ambient glows */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden>
         <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-amber-500/5 blur-3xl" />
@@ -92,7 +106,9 @@ export default async function DashboardPage() {
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
-        {/* ── Header ─────────────────────────────────────────────── */}
+        {/* ════════════════════════════════════════
+            HEADER
+        ════════════════════════════════════════ */}
         <header className="flex items-start justify-between mb-10">
           <div>
             <h1
@@ -101,7 +117,7 @@ export default async function DashboardPage() {
             >
               Hi<span className="text-amber-500"> Golf</span>
             </h1>
-            <p className="text-zinc-500 text-sm mt-1.5">Your golf dashboard</p>
+            <p className="text-zinc-500 text-sm mt-1.5">Your game hub</p>
           </div>
           <form action={signOut}>
             <button
@@ -113,9 +129,11 @@ export default async function DashboardPage() {
           </form>
         </header>
 
-        {/* ── Onboarding Banner ───────────────────────────────────── */}
+        {/* ════════════════════════════════════════
+            ONBOARDING BANNER
+        ════════════════════════════════════════ */}
         {!onboardingComplete && (
-          <div className="mb-8 rounded-2xl bg-amber-500/8 border border-amber-500/25 px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="mb-8 rounded-2xl bg-amber-500/[0.08] border border-amber-500/25 px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="text-amber-400 font-semibold text-sm">Complete your Hi Golf profile</p>
               <p className="text-zinc-400 text-xs mt-0.5 leading-relaxed">
@@ -132,7 +150,32 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* ── Top row: Rewards Balance + Upcoming ─────────────────── */}
+        {/* ════════════════════════════════════════
+            QUICK ACTIONS
+        ════════════════════════════════════════ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          {[
+            { label: 'Book a Session', icon: '📅', href: '/bookings/new' },
+            { label: 'Upload Video',   icon: '🎬', href: '/swings/upload' },
+            { label: 'Add Balance',    icon: '⭐', href: '/credits/buy' },
+            { label: 'My Profile',     icon: '⛳', href: '/onboarding' },
+          ].map(({ label, icon, href }) => (
+            <Link
+              key={label}
+              href={href}
+              className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl bg-zinc-900/60 border border-zinc-800/70 hover:border-zinc-700/80 hover:bg-zinc-800/60 transition-all duration-150 text-center group"
+            >
+              <span className="text-2xl">{icon}</span>
+              <span className="text-zinc-400 group-hover:text-white text-xs font-medium transition-colors leading-tight">
+                {label}
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {/* ════════════════════════════════════════
+            ROW 1 — REWARDS BALANCE + UPCOMING SESSIONS
+        ════════════════════════════════════════ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
           {/* Rewards Balance */}
@@ -148,9 +191,8 @@ export default async function DashboardPage() {
                 </Link>
               }
             />
-
             <div className="flex-1 flex flex-col justify-center">
-              <div className="flex items-end gap-2 mb-5">
+              <div className="flex items-end gap-2 mb-4">
                 <span
                   className="text-6xl font-bold text-amber-500 leading-none"
                   style={{ fontFamily: 'var(--font-playfair)' }}
@@ -161,18 +203,16 @@ export default async function DashboardPage() {
                   reward credit{creditBalance !== 1 ? 's' : ''}
                 </span>
               </div>
-
-              {/* Progress bar */}
-              <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden mb-2">
                 <div
                   className="h-full bg-emerald-500 rounded-full transition-all duration-700 ease-out"
                   style={{ width: `${creditPct}%` }}
                 />
               </div>
-              <p className="text-zinc-600 text-xs mt-2">
+              <p className="text-zinc-600 text-xs">
                 {creditBalance === 0
-                  ? 'No balance yet — add credits to start booking'
-                  : `${creditBalance} reward credit${creditBalance !== 1 ? 's' : ''} available`}
+                  ? 'Add credits to start booking sessions and unlocking rewards.'
+                  : `${creditBalance} reward credit${creditBalance !== 1 ? 's' : ''} available to redeem`}
               </p>
             </div>
           </div>
@@ -190,11 +230,11 @@ export default async function DashboardPage() {
                 </Link>
               }
             />
-
             {upcomingBookings.length === 0 ? (
               <EmptyState
-                message="No upcoming sessions"
-                sub="Book a session to keep your progress going"
+                icon="📅"
+                message="Nothing on the calendar yet"
+                sub="Book your next session to stay on track and keep building momentum."
                 cta="Book a session"
                 href="/bookings/new"
               />
@@ -221,17 +261,19 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Bottom row: Activity History + Video Uploads ─────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ════════════════════════════════════════
+            ROW 2 — ACTIVITY HISTORY + VIDEO UPLOADS
+        ════════════════════════════════════════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
           {/* Activity History */}
           <div className="lg:col-span-2 bg-zinc-900/60 border border-zinc-800/70 rounded-2xl p-6">
             <SectionHeader title="Activity History" />
-
             {recentSessions.length === 0 ? (
               <EmptyState
+                icon="🏌️"
                 message="No activity yet"
-                sub="Your session history will appear here after your first booking"
+                sub="Your sessions, bookings, and milestones will build here as you get going. Every round counts."
               />
             ) : (
               <ul className="divide-y divide-zinc-800/50">
@@ -275,18 +317,20 @@ export default async function DashboardPage() {
                 </Link>
               }
             />
-
             {recentSwings.length === 0 ? (
               <EmptyState
-                message="No uploads yet"
-                sub="Upload a swing video for analysis and feedback"
+                icon="🎬"
+                message="No videos yet"
+                sub="Upload your first swing video for analysis, feedback, and improvement. AI review tools coming soon."
+                cta="Upload a video"
+                href="/swings/upload"
               />
             ) : (
               <ul className="divide-y divide-zinc-800/50">
                 {recentSwings.map((swing) => (
                   <li key={swing.id} className="py-4 first:pt-0 last:pb-0">
                     
-                      <a href={swing.file_url}
+                      href={swing.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-sm font-medium transition-colors"
@@ -306,8 +350,51 @@ export default async function DashboardPage() {
               </ul>
             )}
           </div>
-
         </div>
+
+        {/* ════════════════════════════════════════
+            GOLF FEED PREVIEW — COMING SOON
+        ════════════════════════════════════════ */}
+        <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-6 sm:p-8">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h2 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1">
+                Golf Feed
+              </h2>
+              <p className="text-white text-sm font-medium">Discover, share, and follow</p>
+              <p className="text-zinc-500 text-xs mt-0.5">
+                Short-form golf video and community content — coming to Hi Golf
+              </p>
+            </div>
+            <span className="shrink-0 text-[10px] font-semibold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+              Coming Soon
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Tee shot breakdown',  tag: 'Driver tips' },
+              { label: 'Short game drill',    tag: 'Chipping' },
+              { label: 'Putting technique',   tag: 'On the green' },
+              { label: 'Handicap progress',   tag: 'Journey' },
+            ].map(({ label, tag }) => (
+              <div
+                key={label}
+                className="aspect-[3/4] bg-zinc-800/50 border border-zinc-700/40 rounded-xl flex flex-col justify-between p-3 select-none"
+              >
+                <span className="text-[10px] font-medium text-zinc-500 bg-zinc-900/60 rounded-full px-2 py-0.5 self-start">
+                  {tag}
+                </span>
+                <p className="text-zinc-400 text-xs font-medium leading-tight">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-zinc-600 text-xs text-center mt-5">
+            Post rounds, share swings, and connect with golfers across the Hi Golf community.
+          </p>
+        </div>
+
       </div>
     </div>
   )
