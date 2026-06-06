@@ -330,7 +330,7 @@ export default async function DashboardPage() {
                 {recentSwings.map((swing) => (
                   <li key={swing.id} className="py-4 first:pt-0 last:pb-0">
                     
-                      href={swing.file_url}
+                      <a href={swing.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-sm font-medium transition-colors"
