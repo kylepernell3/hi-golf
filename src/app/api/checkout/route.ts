@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Adjust the column name if your schema uses a different field (e.g. `amount_cents`, `price`).
     const { data: product, error: productError } = await supabase
       .from("products")
-      .select("id, name, sessions_included, active, price_cents")
+      .select("id, name, sessions_included, is_active, price_cents")
       .eq("id", productId)
       .single();
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    if (!product.active) {
+    if (!product.is_active) {
       return NextResponse.json(
         { error: "This product is no longer available" },
         { status: 400 }
