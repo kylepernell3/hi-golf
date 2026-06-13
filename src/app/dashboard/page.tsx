@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 async function signOut() {
   'use server'
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.auth.signOut()
   redirect('/login')
 }
