@@ -1,10 +1,10 @@
 import { getDashboardData } from '@/lib/dashboard'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 async function signOut() {
   'use server'
-  const { createClient } = await import('@/lib/supabase/server')
   const supabase = createClient()
   await supabase.auth.signOut()
   redirect('/login')
