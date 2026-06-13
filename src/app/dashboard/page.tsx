@@ -22,7 +22,7 @@ function formatDateTime(dateString: string) {
 export default async function DashboardPage() {
   const dashboardData = await getDashboardData()
 
-  if (!dashboardData.user) {
+  if (!dashboardData || !dashboardData.user) {
     redirect('/login')
   }
 
