@@ -36,7 +36,7 @@ export default async function DashboardPage() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
               <p className="text-zinc-400 text-sm sm:text-base mt-1">
-                Welcome back, {profile?.full_name || user.email?.split('@')[0]}
+                Welcome back, {'Golfer'}
               </p>
             </div>
             <form action={signOut}>
