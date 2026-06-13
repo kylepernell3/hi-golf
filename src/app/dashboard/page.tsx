@@ -75,7 +75,7 @@ export default async function DashboardPage() {
                 <span className="text-xl sm:text-2xl">🔥</span>
               </div>
               <div className="text-right">
-                <p className="text-2xl sm:text-3xl font-bold text-white">{streak || 0}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{0 || 0}</p>
                 <p className="text-xs sm:text-sm text-emerald-400">Day Streak</p>
               </div>
             </div>
@@ -98,17 +98,16 @@ export default async function DashboardPage() {
         </div>
 
         {/* Latest Activity */}
-        {latestSwing && (
-          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 sm:mb-12">
+            {dashboardData.recentSwings?.[0] && (          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 sm:mb-12">
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Latest Swing Analysis</h2>
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex-1">
                   <p className="text-white font-medium text-base sm:text-lg mb-1">
-                    {latestSwing.club_type || 'Driver'}
+                    {{0 ||dashboardData.recentSwings?.[0]?.club_type || 'Driver'}
                   </p>
                   <p className="text-zinc-400 text-xs sm:text-sm">
-                    {formatDateTime(latestSwing.created_at)}
+                    {formatDateTime({0 ||dashboardData.recentSwings?.[0]?.created_at)}
                   </p>
                 </div>
                 <Link
@@ -118,10 +117,10 @@ export default async function DashboardPage() {
                   View analysis ↗
                 </Link>
               </div>
-              {latestSwing.coach_notes && (
+              {{0 ||dashboardData.recentSwings?.[0]?.coach_notes && (
                 <div className="bg-zinc-800/40 rounded-xl p-4 border border-zinc-700/50">
                   <p className="text-zinc-300 text-sm sm:text-base leading-relaxed">
-                    {latestSwing.coach_notes}
+                    {{0 ||dashboardData.recentSwings?.[0]?.coach_notes}
                   </p>
                 </div>
               )}
