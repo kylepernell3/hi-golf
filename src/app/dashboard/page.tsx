@@ -22,12 +22,11 @@ function formatDateTime(dateString: string) {
 export default async function DashboardPage() {
   const dashboardData = await getDashboardData()
 
-  if (!dashboardData || !dashboardData.user) {
+  if (!dashboardData) {
     redirect('/login')
   }
 
-  const { user, profile, streak, credits, latestSwing } = dashboardData
-
+  // TODO: Add user data to DashboardData type
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
       {/* Header with Logout */}
