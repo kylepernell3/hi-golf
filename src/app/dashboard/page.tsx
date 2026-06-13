@@ -27,10 +27,9 @@ export default async function DashboardPage() {
   }
 
   // TODO: Add user data to DashboardData type
-  return (     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
-    {/* Header with Logout */}
-      <div className="border-b border-zinc-800/50 bg-zinc-950/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+  return (
+        <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+                {/* Header with Logout */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
