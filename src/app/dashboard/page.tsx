@@ -54,15 +54,15 @@ export default async function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         {/* Stats Grid - Mobile Optimized */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
-          {/* Credits Card */}
+          {/* dashboardData.creditBalance Card */}
           <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20 rounded-2xl p-5 sm:p-6">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
                 <span className="text-xl sm:text-2xl">🎯</span>
               </div>
               <div className="text-right">
-                <p className="text-2xl sm:text-3xl font-bold text-white">{credits || 0}</p>
-                <p className="text-xs sm:text-sm text-amber-400">Credits</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{dashboardData.creditBalance || 0}</p>
+                <p className="text-xs sm:text-sm text-amber-400">dashboardData.creditBalance</p>
               </div>
             </div>
             <p className="text-zinc-400 text-xs sm:text-sm">Use for swing analysis & coaching</p>
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
                 <span className="text-2xl sm:text-3xl">🎁</span>
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Rewards</h3>
-              <p className="text-zinc-400 text-xs sm:text-sm">Redeem credits for prizes</p>
+              <p className="text-zinc-400 text-xs sm:text-sm">Redeem dashboardData.creditBalance for prizes</p>
             </Link>
           </div>
         </div>
