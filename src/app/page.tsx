@@ -79,6 +79,52 @@ export default async function HomePage() {
         </div>
       </section>
 
+            {/* Rewards Promise Section */}
+      <section className="relative z-10 px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Our Rewards Promise
+            </h2>
+            <p className="text-lg text-zinc-300 max-w-2xl mx-auto">
+              We believe in rewarding your dedication. Every swing analyzed, every round logged, every milestone reached earns you real value.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-lg p-6">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
+                <span className="text-2xl">🎁</span>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Instant Rewards</h3>
+              <p className="text-zinc-400">
+                Earn credits immediately when you upload swings, log rounds, and hit training milestones. No waiting, no complex rules.
+              </p>
+            </div>
+            
+            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-lg p-6">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
+                <span className="text-2xl">💎</span>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Premium Gear</h3>
+              <p className="text-zinc-400">
+                Redeem your credits for top-tier golf equipment, professional lessons, course vouchers, and exclusive merchandise.
+              </p>
+            </div>
+            
+            <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800 rounded-lg p-6">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
+                <span className="text-2xl">🏆</span>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Your Game, Your Rewards</h3>
+              <p className="text-zinc-400">
+                The more you practice, the more you earn. Every improvement in your game translates to tangible rewards you can use.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Rewards Preview Section - Mobile Optimized */}
       <section className="relative z-10 px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-32">
         <div className="max-w-7xl mx-auto">
