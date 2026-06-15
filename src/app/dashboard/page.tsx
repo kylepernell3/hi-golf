@@ -102,10 +102,10 @@ export default async function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex-1">
                   <p className="text-white font-medium text-base sm:text-lg mb-1">
-                    {{0 ||dashboardData.recentSwings?.[0]?.club_type || 'Driver'}
+                    {dashboardData.recentSwings?.[0]?.club_type || 'Driver'}
                   </p>
                   <p className="text-zinc-400 text-xs sm:text-sm">
-                    {formatDateTime({0 ||dashboardData.recentSwings?.[0]?.created_at)}
+                    {formatDateTime(dashboardData.recentSwings?.[0]?.created_at)}
                   </p>
                 </div>
                 <Link
@@ -115,10 +115,10 @@ export default async function DashboardPage() {
                   View analysis ↗
                 </Link>
               </div>
-              {{0 ||dashboardData.recentSwings?.[0]?.coach_notes && (
+              {dashboardData.recentSwings?.[0]?.coach_notes && (
                 <div className="bg-zinc-800/40 rounded-xl p-4 border border-zinc-700/50">
                   <p className="text-zinc-300 text-sm sm:text-base leading-relaxed">
-                    {{0 ||dashboardData.recentSwings?.[0]?.coach_notes}
+                    {dashboardData.recentSwings?.[0]?.coach_notes}
                   </p>
                 </div>
               )}
