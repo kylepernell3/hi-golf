@@ -1,44 +1,7 @@
 /**
- * Safe query helper utilities for Supabase database queries
- * Provides type-safe wrappers and error handling for common patterns
+ * Safe query helper utilities for database queries
+ * Provides type-safe wrappers and defensive coding patterns
  */
-
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-/**
- * Safely fetches a single row from Supabase with proper type assertion
- * Returns null if no data found, throws if error occurs
- */
-export async function safeSingleQuery<T>(
-  query: ReturnType<SupabaseClient['from']>['select'],
-  errorMessage?: string
-): Promise<T | null> {
-  const { data, error } = await query.maybeSingle()
-  
-  if (error) {
-    console.error(errorMessage || 'Database query error:', error)
-    throw new Error(errorMessage || 'Failed to fetch data')
-  }
-  
-  return (data as T) || null
-}
-
-/**
- * Safely fetches multiple rows with proper type assertion
- */
-export async function safeArrayQuery<T>(
-  query: ReturnType<SupabaseClient['from']>['select'],
-  errorMessage?: string
-): Promise<T[]> {
-  const { data, error } = await query
-  
-  if (error) {
-    console.error(errorMessage || 'Database query error:', error)
-    throw new Error(errorMessage || 'Failed to fetch data')
-  }
-  
-  return (data as T[]) || []
-}
 
 /**
  * Type guard to check if a value exists and is not null/undefined
@@ -66,4 +29,26 @@ export function formatNumber(
 ): string | null {
   if (value === null || value === undefined) return null
   return value.toFixed(decimals)
+}
+
+/**
+ * Safely parses JSON with error handling
+ */
+export function safeJsonParse<T>(
+  jsonString: string | null | undefined,
+  fallback: T
+): T {
+  if (!jsonString) return fallback
+  try {
+    return JSON.parse(jsonString) as T
+  } catch {
+    return fallback
+  }
+}
+
+/**
+ * Creates a type-safe assertion for database query results
+ */
+export function assertType<T>(data: unknown): T {
+  return data as T
 }
