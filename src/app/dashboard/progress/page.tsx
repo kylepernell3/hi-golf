@@ -49,7 +49,7 @@ export default async function ProgressPage() {
   const recentDiffs = rounds.slice(-8).filter(r => r.handicap_differential !== null)
   const liveHandicap = recentDiffs.length > 0
     ? (recentDiffs.reduce((s, r) => s + (r.handicap_differential ?? 0), 0) / recentDiffs.length).toFixed(1)
-    : profileData?.handicap_index?.toFixed(1) ?? null
+    : : (profileData as { handicap_index?: number | null } | null)?.handicap_index?.toFixed(1) ?? null
 
   return (
     <div className="relative min-h-screen bg-zinc-950 overflow-x-hidden">
