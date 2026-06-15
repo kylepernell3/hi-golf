@@ -140,6 +140,52 @@ create table if not exists public.reward_redemptions (
   created_at      timestamptz not null default now()
 );
 
+-- ── credit_transactions ──────────────────────────────
+-- Tracks all credit earning and spending transactions for complete audit trail
+create type transaction_type as enum (
+    'round_completion',
+    'goal_achievement',
+    'reward_redemption',
+    'manual_adjustment',
+    'referral_bonus',
+    'coach_bonus'
+  );
+
+create table if not exists public.credit_transactions (
+    id                uuid primary key default gen_random_uuid(),
+    student_id        uuid not null references public.users(id) on delete cascade,
+    amount            integer not null check (amount != 0),
+    transaction_type  transaction_type not null,
+    reference_id      uuid,
+    reference_type    text,
+    description       text,
+    balance_after     integer not null check (balance_after >= 0),
+    created_at        timestamptz not null default now(),
+    created_by        uuid references public.users(id) on delete set null
+  );
+
+alter table public.credit_transactions enable row level security;
+
+create policy "Students can view own transactions"
+    on public.credit_transactions for select
+    using (student_id = auth.uid());
+
+create policy "System can insert transactions"
+    on public.credit_transactions for insert
+    with check (true);
+
+create policy "Coaches and admins can view all transactions"
+    on public.credit_transactions for select
+    using (
+      exists (
+        select 1 from public.users u
+        where u.id = auth.uid() and u.role in ('coach','admin')
+      )
+    );
+
+create index if not exists credit_transactions_student_id_idx on public.credit_transactions(student_id);
+create index if not exists credit_transactions_created_at_idx on public.credit_transactions(created_at desc);
+
 alter table public.reward_redemptions enable row level security;
 
 create policy "Students can view own redemptions"
