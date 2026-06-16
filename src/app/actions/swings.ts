@@ -21,8 +21,11 @@ export async function logSwingUpload(formData: FormData) {
     throw new Error('Missing required fields')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+
   // 1. Insert the swing upload
-  const { data: swing, error: swingError } = await supabase
+  const { data: swing, error: swingError } = await db
     .from('swing_uploads')
     .insert({
       student_id: user.id,
@@ -37,20 +40,16 @@ export async function logSwingUpload(formData: FormData) {
 
   if (swingError || !swing) throw new Error(`Failed to save swing: ${swingError?.message}`)
 
-  // 2. Manually award credits via the DB function (no auto-trigger on swing_uploads)
-  const { error: creditError } = await supabase.rpc('create_credit_transaction', {
+  // 2. Award credits via the ledger function
+  const { error: creditError } = await db.rpc('create_credit_transaction', {
     p_student_id: user.id,
     p_amount: SWING_UPLOAD_CREDITS,
-    p_transaction_type: 'manual_adjustment',
-    p_reference_id: swing.id,
-    p_reference_type: 'swing_upload',
-    p_description: `Credits earned from swing upload (${category})`,
-    p_created_by: user.id,
+    p_transaction_type: 'swing_upload',
+    p_note: `Swing uploaded on ${recordedDate}`,
   })
 
   if (creditError) {
-    // Log but don\'t fail — swing is saved, credit will be retried manually
-    console.error('Credit award failed for swing upload:', creditError.message)
+    console.error('Credit award failed:', creditError.message)
   }
 
   revalidatePath('/dashboard/swings')
