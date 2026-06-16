@@ -7,7 +7,6 @@ type LedgerEntry = {
   id: string
   amount: number
   transaction_type: string
-  note: string | null
   created_at: string
 }
 
@@ -15,15 +14,14 @@ type Redemption = {
   id: string
   credits_spent: number
   reward_type: string
-  reward_detail: string | null
   status: string
   created_at: string
 }
 
 const REWARD_OPTIONS = [
-  { type: 'free_lesson', label: 'Free Lesson', description: 'Redeem credits for a complimentary coaching session', cost: 500, icon: '\uD83C\uDFEB' },
-  { type: 'gear_discount', label: 'Gear Discount', description: '20% off at the pro shop', cost: 250, icon: '\u26FA' },
-  { type: 'club_credit', label: 'Club Credit', description: 'Credit toward your club membership', cost: 300, icon: '\uD83C\uDFB0' },
+  { type: 'free_lesson', label: 'Free Lesson', description: 'Complimentary coaching session', cost: 500 },
+  { type: 'gear_discount', label: 'Gear Discount', description: '20% off at the pro shop', cost: 250 },
+  { type: 'club_credit', label: 'Club Credit', description: 'Credit toward your club membership', cost: 300 },
 ]
 
 const STATUS_COLORS: Record<string, string> = {
@@ -48,36 +46,21 @@ async function redeemReward(formData: FormData) {
   const rewardType = formData.get('reward_type') as string
   const creditsCost = Number(formData.get('credits_spent'))
 
-  // Check balance first
-  const { data: txns } = await db
-    .from('credit_transactions')
-    .select('amount')
-    .eq('student_id', user.id)
+  const { data: txns } = await db.from('credit_transactions').select('amount').eq('student_id', user.id)
   const balance = (txns ?? []).reduce((sum: number, t: { amount: number }) => sum + t.amount, 0)
-
   if (balance < creditsCost) throw new Error('Insufficient credits')
 
-  // Insert redemption record
   const { error: redemptionError } = await db
     .from('reward_redemptions')
-    .insert({
-      student_id: user.id,
-      reward_type: rewardType,
-      credits_spent: creditsCost,
-      status: 'pending',
-    })
-
+    .insert({ student_id: user.id, reward_type: rewardType, credits_spent: creditsCost, status: 'pending' })
   if (redemptionError) throw new Error(`Redemption failed: ${redemptionError.message}`)
 
-  // Debit from ledger
-  const { error: debitError } = await db.rpc('create_credit_transaction', {
+  await db.rpc('create_credit_transaction', {
     p_student_id: user.id,
     p_amount: -creditsCost,
     p_transaction_type: 'redemption',
-    p_note: `Redeemed: ${rewardType}`,
+    p_description: `Redeemed: ${rewardType}`,
   })
-
-  if (debitError) throw new Error(`Debit failed: ${debitError.message}`)
 
   revalidatePath('/dashboard/rewards')
   redirect('/dashboard/rewards')
@@ -92,8 +75,8 @@ export default async function RewardsPage() {
   const db = supabase as any
 
   const [{ data: ledgerData }, { data: redemptionsData }] = await Promise.all([
-    db.from('credit_transactions').select('id, amount, transaction_type, note, created_at').eq('student_id', user.id).order('created_at', { ascending: false }).limit(50),
-    db.from('reward_redemptions').select('id, credits_spent, reward_type, reward_detail, status, created_at').eq('student_id', user.id).order('created_at', { ascending: false }),
+    db.from('credit_transactions').select('id, amount, transaction_type, created_at').eq('student_id', user.id).order('created_at', { ascending: false }).limit(50),
+    db.from('reward_redemptions').select('id, credits_spent, reward_type, status, created_at').eq('student_id', user.id).order('created_at', { ascending: false }),
   ])
 
   const ledger: LedgerEntry[] = ledgerData ?? []
@@ -111,14 +94,11 @@ export default async function RewardsPage() {
           <span className="text-sm text-zinc-300">Rewards</span>
         </div>
       </header>
-
       <main className="max-w-xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">Rewards Center</h1>
-          <p className="text-zinc-400 text-sm mt-1">Earn points, redeem rewards</p>
+          <p className="text-zinc-400 text-sm mt-1">Earn credits by logging rounds and uploading swings</p>
         </div>
-
-        {/* Balance card */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-6 grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-2xl font-bold text-amber-400">{balance.toLocaleString()}</div>
@@ -133,8 +113,6 @@ export default async function RewardsPage() {
             <div className="text-xs text-zinc-500 mt-1">Redeemed</div>
           </div>
         </div>
-
-        {/* Redeem options */}
         <div className="mb-6">
           <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3">Redeem Rewards</h2>
           <div className="space-y-3">
@@ -143,7 +121,7 @@ export default async function RewardsPage() {
               return (
                 <div key={opt.type} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4">
                   <div>
-                    <div className="font-semibold text-white">{opt.icon} {opt.label}</div>
+                    <div className="font-semibold text-white">{opt.label}</div>
                     <div className="text-xs text-zinc-400 mt-0.5">{opt.description}</div>
                     <div className="text-xs text-amber-400 mt-1">{opt.cost.toLocaleString()} credits</div>
                   </div>
@@ -151,9 +129,7 @@ export default async function RewardsPage() {
                     <form action={redeemReward}>
                       <input type="hidden" name="reward_type" value={opt.type} />
                       <input type="hidden" name="credits_spent" value={opt.cost} />
-                      <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-lg text-sm transition-colors">
-                        Redeem
-                      </button>
+                      <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-4 py-2 rounded-lg text-sm">Redeem</button>
                     </form>
                   ) : (
                     <span className="text-xs text-zinc-500 bg-zinc-800 px-3 py-2 rounded-lg">Need more credits</span>
@@ -163,8 +139,6 @@ export default async function RewardsPage() {
             })}
           </div>
         </div>
-
-        {/* Redemption history */}
         {redemptions.length > 0 && (
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3">Redemption History</h2>
@@ -172,7 +146,7 @@ export default async function RewardsPage() {
               {redemptions.map((r) => (
                 <div key={r.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-center justify-between">
                   <div>
-                    <div className="text-sm text-white capitalize">{r.reward_type.replace('_', ' ')}</div>
+                    <div className="text-sm text-white capitalize">{r.reward_type.replace(/_/g, ' ')}</div>
                     <div className="text-xs text-zinc-500">{formatDate(r.created_at)}</div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -184,8 +158,6 @@ export default async function RewardsPage() {
             </div>
           </div>
         )}
-
-        {/* Credit ledger */}
         <div>
           <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3">Points History</h2>
           {ledger.length === 0 ? (
@@ -196,7 +168,6 @@ export default async function RewardsPage() {
                 <div key={entry.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-center justify-between">
                   <div>
                     <div className="text-sm text-white capitalize">{entry.transaction_type.replace(/_/g, ' ')}</div>
-                    {entry.note && <div className="text-xs text-zinc-500">{entry.note}</div>}
                     <div className="text-xs text-zinc-600">{formatDate(entry.created_at)}</div>
                   </div>
                   <span className={`text-sm font-semibold ${entry.amount > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
