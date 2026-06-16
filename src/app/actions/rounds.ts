@@ -26,7 +26,9 @@ export async function logRound(formData: FormData) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const db = supabase as any
+
+  const { error } = await db
     .from('rounds')
     .insert({
       student_id: user.id,
@@ -46,13 +48,12 @@ export async function logRound(formData: FormData) {
 
   if (error) throw new Error(`Failed to log round: ${error.message}`)
 
-  // Explicitly award 50 credits via ledger function
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any).rpc('create_credit_transaction', {
+  // Award 50 credits via ledger function
+  await db.rpc('create_credit_transaction', {
     p_student_id: user.id,
     p_amount: 50,
     p_transaction_type: 'round_logged',
-    p_note: `Round logged at ${courseName}`,
+    p_description: `Round logged at ${courseName}`,
   })
 
   revalidatePath('/dashboard/rounds')
