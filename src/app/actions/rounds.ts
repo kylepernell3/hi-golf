@@ -25,8 +25,8 @@ export async function logRound(formData: FormData) {
     throw new Error('Missing required fields')
   }
 
-  // Insert the round — DB trigger (rounds_credit_trigger) auto-awards 50 credits
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from('rounds')
     .insert({
       student_id: user.id,
@@ -45,6 +45,15 @@ export async function logRound(formData: FormData) {
     })
 
   if (error) throw new Error(`Failed to log round: ${error.message}`)
+
+  // Explicitly award 50 credits via ledger function
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).rpc('create_credit_transaction', {
+    p_student_id: user.id,
+    p_amount: 50,
+    p_transaction_type: 'round_logged',
+    p_note: `Round logged at ${courseName}`,
+  })
 
   revalidatePath('/dashboard/rounds')
   revalidatePath('/dashboard/rewards')
