@@ -45,7 +45,7 @@ export async function logSwingUpload(formData: FormData) {
     p_student_id: user.id,
     p_amount: SWING_UPLOAD_CREDITS,
     p_transaction_type: 'swing_upload',
-    p_note: `Swing uploaded on ${recordedDate}`,
+    p_description: `Swing uploaded on ${recordedDate}`,
   })
 
   if (creditError) {
