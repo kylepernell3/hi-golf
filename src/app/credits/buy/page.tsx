@@ -12,7 +12,7 @@ type Product = {
   stripe_price_id: string | null
 }
 
-export default async function BuyCreditsPage() {
+export default async function BuyPassPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -33,42 +33,37 @@ export default async function BuyCreditsPage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-zinc-400 mb-8">
-          <Link href="/dashboard" className="hover:text-white transition-colors">← Dashboard</Link>
+          <Link href="/dashboard" className="hover:text-white transition-colors">&larr; Dashboard</Link>
           <span>/</span>
-          <span className="text-white">Add Balance</span>
+          <span className="text-white">Buy a Pass</span>
         </div>
 
         <h1 className="text-3xl font-bold mb-1">
-          Add <span className="text-amber-400 italic font-serif">Balance</span>
+          Buy a <span className="text-amber-400 italic font-serif">Pass</span>
         </h1>
-        <p className="text-zinc-400 mb-8">Purchase session credits to book coaching time</p>
+        <p className="text-zinc-400 mb-8">Choose a coaching pass to book your sessions</p>
 
         {productList.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center">
             <div className="text-4xl mb-4">⭐</div>
-            <h3 className="text-lg font-semibold mb-2">No packages available</h3>
-            <p className="text-zinc-400 text-sm">Check back soon for available session packages.</p>
+            <h3 className="text-lg font-semibold mb-2">No passes available</h3>
+            <p className="text-zinc-400">Check back soon for available coaching passes.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {productList.map((product) => (
-              <div
-                key={product.id}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex items-center justify-between gap-4"
-              >
-                <div className="flex-1">
+              <div key={product.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex items-center justify-between">
+                <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg font-semibold">{product.name}</span>
-                    <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                    <span className="font-semibold text-lg">{product.name}</span>
+                    <span className="text-xs bg-amber-500 text-black font-semibold px-2 py-0.5 rounded-full">
                       {product.sessions_included} session{product.sessions_included !== 1 ? 's' : ''}
                     </span>
                   </div>
                   {product.description && (
-                    <p className="text-zinc-400 text-sm">{product.description}</p>
+                    <p className="text-zinc-400 text-sm mb-2">{product.description}</p>
                   )}
-                  <p className="text-2xl font-bold text-white mt-2">
-                    ${(product.price_cents / 100).toFixed(2)}
-                  </p>
+                  <p className="text-2xl font-bold">${(product.price_cents / 100).toFixed(2)}</p>
                 </div>
                 <BuyButton productId={product.id} />
               </div>
@@ -76,8 +71,8 @@ export default async function BuyCreditsPage() {
           </div>
         )}
 
-        <p className="text-center text-zinc-600 text-xs mt-8">
-          Secure checkout powered by Stripe. Credits are added to your account immediately after payment.
+        <p className="text-center text-zinc-500 text-sm mt-8">
+          Secure checkout powered by Stripe. Sessions are added to your account immediately after payment.
         </p>
       </div>
     </div>
