@@ -5,7 +5,9 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET() {
   const supabase = await createClient()
 
-  const { data: products, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const { data: products, error } = await db
     .from('products')
     .select('id, name, description, sessions_included, price_cents, stripe_price_id')
     .eq('is_active', true)
